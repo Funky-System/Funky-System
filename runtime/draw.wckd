@@ -1,0 +1,7 @@
+export syscall setColor(r, g, b, a)
+export syscall rect(x, y, w, h)
+export syscall fillRect(x, y, w, h)
+export syscall cls()
+export syscall circle(x, y, r)
+export syscall fillCircle(x, y, r)
+export syscall line(x1, y1, x2, y2)

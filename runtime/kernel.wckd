@@ -1,0 +1,27 @@
+import draw
+
+function print(str)
+    asm "
+        ld.arg 0
+        syscall.byname \"debug_print\"
+        pop
+    "
+end
+
+function pump_events()
+    asm "syscall.byname \"pump_events\""
+end
+
+var running = true
+while running do
+    draw.setColor(0, 0, 0, 255)
+    draw.cls()
+    draw.setColor(255, 255, 0, 255)
+    draw.rect(10, 10, 20, 30)
+    draw.setColor(0, 255, 0, 255)
+    draw.fillCircle(100, 100, 30)
+    draw.setColor(0, 0, 255, 255)
+    draw.circle(105, 100, 30)
+    draw.line(10, 10, 30, 10)
+    pump_events()
+end
