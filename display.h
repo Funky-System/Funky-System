@@ -5,7 +5,7 @@
 #ifndef FUNKY_SYSTEM_DISPLAY_H
 #define FUNKY_SYSTEM_DISPLAY_H
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 typedef struct fs_display_t {
     SDL_Window *window;

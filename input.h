@@ -5,7 +5,7 @@
 #ifndef FUNKY_SYSTEM_INPUT_H
 #define FUNKY_SYSTEM_INPUT_H
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 typedef struct fs_input_t {
 

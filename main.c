@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include <funkyvm/funkyvm.h>
 
@@ -15,6 +15,8 @@ void debug_print(CPU_State *state) {
     printf("%s", str);
 }
 
+Uint32 fps_cap = 60;
+
 Uint32 prev_ticks = 0;
 Uint32 tmr = 0;
 Uint32 num_frames = 0;
@@ -24,7 +26,7 @@ void pump_events(CPU_State *state) {
     tmr += start_ticks - prev_ticks;
     prev_ticks = start_ticks;
     if (tmr >= 5000) {
-        printf("FPS: %.2f, load: %.2f%%\n", num_frames / 5.0, ((5000.0 - overhead) / 5000.0) * 100.0);
+        printf("FPS: %.2f, load: %.2f%%\n", (float)num_frames / (float)tmr * 1000.0, (((float)tmr - overhead) / (float)tmr) * 100.0);
         tmr = 0;
         overhead = 0;
         num_frames = 0;
@@ -34,11 +36,11 @@ void pump_events(CPU_State *state) {
     display_frame(&display);
 
     Uint32 frameTicks = SDL_GetTicks() - start_ticks;
-    if (frameTicks < (1000.0 / 60.0))
+    if (frameTicks < (1000.0 / fps_cap))
     {
         //Wait remaining time
-        overhead += (1000.0/60.0) - frameTicks;
-        SDL_Delay((1000.0/60.0) - frameTicks);
+        overhead += (1000.0/fps_cap) - frameTicks;
+        SDL_Delay((1000.0/fps_cap) - frameTicks);
     }
 }
 
