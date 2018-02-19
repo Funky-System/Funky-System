@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include <funkyvm/funkyvm.h>
 
@@ -14,6 +14,8 @@ void debug_print(CPU_State *state) {
     const char* str = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
     printf("%s", str);
 }
+
+Uint32 fps_cap = 60;
 
 Uint32 prev_ticks = 0;
 Uint32 tmr = 0;

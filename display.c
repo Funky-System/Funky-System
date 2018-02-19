@@ -2,7 +2,7 @@
 // Created by Bas du Pré on 18-02-18.
 //
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include "display.h"
 #include "font.h"
