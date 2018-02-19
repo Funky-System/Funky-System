@@ -5,10 +5,28 @@
 #include <SDL.h>
 
 #include "display.h"
+#include "font.h"
 
 const int scale = 3;
 const int SCREEN_WIDTH = 256;
 const int SCREEN_HEIGHT = 192;
+
+fs_font_t f = (fs_font_t) {
+        .name = "hoi",
+        .max_width = 5,
+        .height = 5,
+        .glyphs = (fs_glyph_t[]) {
+                {
+                        .width = 2,
+                        .height = 5,
+                        .character = 'a',
+                        .points = (fs_glyph_pixel_t[]) {
+                                { .x = 1, .y = 4 },
+                                { .x = 1, .y = 2 },
+                        }
+                }
+        }
+};
 
 fs_display_t display_init() {
     fs_display_t display = { 0 };
@@ -28,15 +46,17 @@ fs_display_t display_init() {
         exit(EXIT_FAILURE);
     }
 
-    display.renderer = SDL_CreateRenderer(display.window, -1, SDL_RENDERER_ACCELERATED);
+    display.renderer = SDL_CreateRenderer(display.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetScale(display.renderer, scale, scale);
-    SDL_RenderSetLogicalSize(display.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
-    SDL_RenderSetIntegerScale(display.renderer, SDL_TRUE);
+    //SDL_RenderSetLogicalSize(display.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    //SDL_RenderSetIntegerScale(display.renderer, SDL_TRUE);
     SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, 0);
     if(display.renderer == NULL) {
         printf("Renderer could not be created! SDL Error: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
+    display.camera = (SDL_Point) { .x = 0, .y = 0 };
 
     return display;
 }
@@ -49,32 +69,5 @@ void display_destroy(fs_display_t *display) {
 }
 
 void display_frame(fs_display_t *display) {
-    /*
-    // Clear screen
-    SDL_SetRenderDrawColor(display->renderer, 0x00, 0x00, 0x00, 0xFF);
-    SDL_RenderClear(display->renderer);
-    //Render red filled quad
-    SDL_Rect fillRect = { SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-    SDL_SetRenderDrawColor( display->renderer, 0xFF, 0x00, 0x00, 0xFF );
-    SDL_RenderFillRect( display->renderer, &fillRect );
-
-    //Render green outlined quad
-    SDL_Rect outlineRect = { SCREEN_WIDTH / 6, SCREEN_HEIGHT / 6, SCREEN_WIDTH * 2 / 3, SCREEN_HEIGHT * 2 / 3 };
-    SDL_SetRenderDrawColor( display->renderer, 0x00, 0xFF, 0x00, 0xFF );
-    SDL_RenderDrawRect( display->renderer, &outlineRect );
-
-    //Draw blue horizontal line
-    SDL_SetRenderDrawColor( display->renderer, 0x00, 0x00, 0xFF, 0xFF );
-    SDL_RenderDrawLine( display->renderer, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2 );
-
-    //Draw vertical line of yellow dots
-    SDL_SetRenderDrawColor( display->renderer, 0xFF, 0xFF, 0x00, 0xFF );
-    for( int i = 0; i < SCREEN_HEIGHT; i += 4 )
-    {
-        SDL_RenderDrawPoint( display->renderer, SCREEN_WIDTH / 2, i );
-    }
-    */
-
-    //Update screen
     SDL_RenderPresent(display->renderer);
 }

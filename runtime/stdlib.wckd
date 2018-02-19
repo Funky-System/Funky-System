@@ -1,0 +1,50 @@
+(prototypeof array).length = arrayLength
+function arrayLength()
+    var length = 0
+    asm "
+        ld.local 0
+        ld.mapitem \"value\"
+        arr.len
+        st.local 1
+    "
+    return length
+end
+
+(prototypeof string).length = stringLength
+function stringLength()
+    var length = 0
+    asm "
+        ld.local 0
+        ld.mapitem \"value\"
+        str.len
+        st.local 1
+    "
+    return length
+end
+
+(prototypeof array).deleteAt = arrayDeleteAt
+function arrayDeleteAt(index)
+    asm "
+        ld.local 0
+        ld.arg 0
+        del.arrelem
+    "
+end
+
+(prototypeof string).toLowerCase = stringToLowerCase
+function stringToLowerCase()
+    var copy = 0
+    asm "
+        ld.local 0
+        ld.mapitem \"value\"
+        ld.str \"\"
+        str.concat
+        st.local 1
+    "
+    for i in 0..copy.length() - 1 do
+        if copy[i] >= 65 && copy[i] <= 90 then
+            copy[i] += 32;
+        end
+    end
+    return copy
+end

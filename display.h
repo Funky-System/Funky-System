@@ -10,6 +10,7 @@
 typedef struct fs_display_t {
     SDL_Window *window;
     SDL_Renderer *renderer;
+    SDL_Point camera;
 } fs_display_t;
 
 fs_display_t display_init();

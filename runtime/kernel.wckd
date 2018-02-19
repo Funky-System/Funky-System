@@ -1,8 +1,15 @@
+import stdlib
 import draw
+import color
+import input
+import timer
 
-function print(str)
+var colors = color.Names
+
+function debug_print(str)
     asm "
         ld.arg 0
+        conv.str
         syscall.byname \"debug_print\"
         pop
     "
@@ -12,16 +19,200 @@ function pump_events()
     asm "syscall.byname \"pump_events\""
 end
 
+
+draw.setFont("8px")
+draw.setColor(colors.White)
+var fontHeight = 8
+
+var numRows = 192 / fontHeight
+var rows = []
+rows[numRows - 1] = empty # create elements
+
+for i in 0..numRows - 1 do
+    rows[i] = ""
+end
+
+rows[0] = "Funky System"
+rows[1] = "---"
+rows[2] = "# "
+
+var keyStates = {}
+
+function print(str)
+    rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + str
+    cursor_x += rows[cursor_y].length()
+end
+
+function newLine()
+    cursor_y += 1
+    cursor_x = 0
+    if cursor_y > numRows - 1 then
+        rows.deleteAt(0)
+        cursor_y = numRows - 1
+        rows[cursor_y] = ""
+    end
+end
+
+function printLine(line)
+    print(line)
+    newLine()
+end
+
+var commandHistory = []
+var commandHistoryIndex = 0
+function processCommand(cmd)
+    commandHistory[] = cmd
+    debug_print(cmd + "\n")
+
+    newLine()
+    printLine(cmd)
+
+    print("# ")
+end
+
+function processInputDown(c)
+    if keyStates[c] == empty then
+        if c == "left" then
+            cursor_x -= 1
+            if cursor_x < 2 then
+                cursor_x = 2
+            end
+        else if c == "right" then
+            cursor_x += 1
+            if cursor_x > rows[cursor_y].length() then
+                cursor_x = rows[cursor_y].length()
+            end
+        else if c == "backspace" then
+            if cursor_x > 2 then
+                rows[cursor_y] = rows[cursor_y][0:cursor_x - 2] + rows[cursor_y][cursor_x:-1]
+                cursor_x -= 1
+            end
+        else if c == "home" then
+            cursor_x = 2
+        else if c == "end" then
+            cursor_x = rows[cursor_y].length()
+        else if c == "delete" then
+            if cursor_x < rows[cursor_y].length() then
+                rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + rows[cursor_y][cursor_x + 1:-1]
+            end
+        else if c == "up" then
+            commandHistoryIndex += 1
+            if (commandHistoryIndex > commandHistory.length()) then commandHistoryIndex = commandHistory.length()
+            rows[cursor_y] = "# "
+            if commandHistoryIndex >= 1 then
+                 rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
+            end
+            cursor_x = rows[cursor_y].length()
+        else if c == "down" then
+            commandHistoryIndex -= 1
+            if (commandHistoryIndex < 0) then commandHistoryIndex = 0
+            rows[cursor_y] = "# "
+            if commandHistoryIndex >= 1 then
+                 rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
+            end
+            cursor_x = rows[cursor_y].length()
+        else if c == "return" then
+            processCommand(rows[cursor_y][2:-1])
+        else
+            var c_tmp = c
+            if input.key(input.Keys.Lshift) || input.key(input.Keys.Rshift) then
+                debug_print("uc\n");
+                debug_print(c_tmp)
+            else
+                c_tmp = c.toLowerCase()
+                debug_print("lc\n");
+                debug_print(c_tmp)
+            end
+            rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + c_tmp + rows[cursor_y][cursor_x:-1]
+            cursor_x += 1
+        end
+        keyStates[c] = true
+
+    end
+end
+
+function processInputUp(c)
+    keyStates[c] = empty
+end
+
+function checkInput()
+    if input.key(input.Keys.A) then processInputDown("A") ; else processInputUp("A")
+    if input.key(input.Keys.B) then processInputDown("B") ; else processInputUp("B")
+    if input.key(input.Keys.C) then processInputDown("C") ; else processInputUp("C")
+    if input.key(input.Keys.D) then processInputDown("D") ; else processInputUp("D")
+    if input.key(input.Keys.E) then processInputDown("E") ; else processInputUp("E")
+    if input.key(input.Keys.F) then processInputDown("F") ; else processInputUp("F")
+    if input.key(input.Keys.G) then processInputDown("G") ; else processInputUp("G")
+    if input.key(input.Keys.H) then processInputDown("H") ; else processInputUp("H")
+    if input.key(input.Keys.I) then processInputDown("I") ; else processInputUp("I")
+    if input.key(input.Keys.J) then processInputDown("J") ; else processInputUp("J")
+    if input.key(input.Keys.K) then processInputDown("K") ; else processInputUp("K")
+    if input.key(input.Keys.L) then processInputDown("L") ; else processInputUp("L")
+    if input.key(input.Keys.M) then processInputDown("M") ; else processInputUp("M")
+    if input.key(input.Keys.N) then processInputDown("N") ; else processInputUp("N")
+    if input.key(input.Keys.O) then processInputDown("O") ; else processInputUp("O")
+    if input.key(input.Keys.P) then processInputDown("P") ; else processInputUp("P")
+    if input.key(input.Keys.Q) then processInputDown("Q") ; else processInputUp("Q")
+    if input.key(input.Keys.R) then processInputDown("R") ; else processInputUp("R")
+    if input.key(input.Keys.S) then processInputDown("S") ; else processInputUp("S")
+    if input.key(input.Keys.T) then processInputDown("T") ; else processInputUp("T")
+    if input.key(input.Keys.U) then processInputDown("U") ; else processInputUp("U")
+    if input.key(input.Keys.V) then processInputDown("V") ; else processInputUp("V")
+    if input.key(input.Keys.W) then processInputDown("W") ; else processInputUp("W")
+    if input.key(input.Keys.X) then processInputDown("X") ; else processInputUp("X")
+    if input.key(input.Keys.Y) then processInputDown("Y") ; else processInputUp("Y")
+    if input.key(input.Keys.Z) then processInputDown("Z") ; else processInputUp("Z")
+    if input.key(input.Keys.Space) then processInputDown(" ") ; else processInputUp(" ")
+
+    if input.key(input.Keys.Left) then processInputDown("left") ; else processInputUp("left")
+    if input.key(input.Keys.Right) then processInputDown("right") ; else processInputUp("right")
+    if input.key(input.Keys.Home) then processInputDown("home") ; else processInputUp("home")
+    if input.key(input.Keys.End) then processInputDown("end") ; else processInputUp("end")
+    if input.key(input.Keys.Up) then processInputDown("up") ; else processInputUp("up")
+    if input.key(input.Keys.Down) then processInputDown("down") ; else processInputUp("down")
+    if input.key(input.Keys.Backspace) then processInputDown("backspace") ; else processInputUp("backspace")
+    if input.key(input.Keys.Delete) then processInputDown("delete") ; else processInputUp("delete")
+
+    if input.key(input.Keys.Return) then processInputDown("return") ; else processInputUp("return")
+end
+
+var cursor_x = 2, cursor_y = 2
+
 var running = true
+var state
 while running do
-    draw.setColor(0, 0, 0, 255)
-    draw.cls()
-    draw.setColor(255, 255, 0, 255)
-    draw.rect(10, 10, 20, 30)
-    draw.setColor(0, 255, 0, 255)
-    draw.fillCircle(100, 100, 30)
-    draw.setColor(0, 0, 255, 255)
-    draw.circle(105, 100, 30)
-    draw.line(10, 10, 30, 10)
+    checkInput()
+
+    draw.cls(colors.Black)
+
+    if input.key(input.Keys.Z) then
+        draw.setColor(colors.Red)
+    else
+        draw.setColor(colors.White)
+    end
+
+    #var time = timer.getTicks() / 500
+    #if time % 2 == 0 then
+        draw.fillRect(1 + cursor_x * 6, 1 + cursor_y * fontHeight, 5, fontHeight - 1, colors.Gray)
+    #end
+
+    for i in 0..(numRows - 1) do
+        draw.textMono(1, 1 + i * fontHeight, rows[i])
+    end
+
+
+
+#    draw.text(10, 10, "1234567890")
+#    draw.text(10, 20, "Algemeen bekend Bas du Pre Come Dore Every")
+#    draw.text(10, 30, "Flute Goon Hi I'm John Kloot Lief More")
+#    draw.text(10, 40, "Nooit Over Prak Qwerty Risen State Toon")
+#    draw.text(10, 50, "Undefined Variable Welcome Xanadu")
+#    draw.text(10, 60, "You are \"Zion\", said he!?")
+#    draw.text(10, 70, "me@basdupre.com")
+#    draw.text(10, 80, "draw.setColor(colors.Purple[9])")
+#    draw.text(10, 90, "Price: $ 50,19 / 100")
+#    draw.text(10, 100, "The quick brown fox jumped over the lazy dog!?")
+#    draw.text(10, 110, "i = 1 + (4 - 5)")
+
     pump_events()
 end
