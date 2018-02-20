@@ -7,7 +7,6 @@
 
 static void getKeyState(CPU_State *state) {
     const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
-    if (STACK_VALUE(state, 0)->int_value == SDL_SCANCODE_LSHIFT) printf("state: %d\n", keyboard_state[STACK_VALUE(state, 0)->int_value]);
     state->rr.int_value = keyboard_state[STACK_VALUE(state, 0)->int_value];
     state->rr.type = VM_TYPE_INT;
 }
