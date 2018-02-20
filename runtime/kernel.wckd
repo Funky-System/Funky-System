@@ -65,7 +65,12 @@ function processCommand(cmd)
     debug_print(cmd + "\n")
 
     newLine()
-    printLine(cmd)
+
+    if cmd == "exit" then
+        running = false
+    else
+        printLine(cmd)
+    end
 
     print("# ")
 end
@@ -106,10 +111,37 @@ var shiftTable = {
     "7": "&",
     "8": "*",
     "9": "(",
-    "0": ")"
+    "0": ")",
+    " ": " ",
+    "-": "_",
+    "=": "+",
+    "[": "{",
+    "]": "}",
+    ";": ":",
+    "'": "\"",
+    "\\": "|",
+    ",": "<",
+    ".": ">",
+    "/": "?",
+    "`": "~"
 }
 
+var autocomplete_commands = ["exit", "test", "long_command"]
+
+function autocomplete()
+    var stringToCursor = rows[cursor_y][2:cursor_x - 1]
+    for cmd in autocomplete_commands do
+        if cmd.startsWith(stringToCursor) then
+            var stringFromCursor = rows[cursor_y][cursor_x:-1]
+            rows[cursor_y] = rows[cursor_y][0:1] + cmd + stringFromCursor
+            cursor_x = cmd.length() + 2
+            return
+        end
+    end
+end
+
 function processInputDown(c)
+    lastKeyPress = timer.getTicks()
     if keyStates[c] == empty then
         if c == "left" then
             cursor_x -= 1
@@ -152,16 +184,18 @@ function processInputDown(c)
             cursor_x = rows[cursor_y].length()
         else if c == "return" then
             processCommand(rows[cursor_y][2:-1])
+        else if c == "tab" then
+            autocomplete()
         else
             var c_tmp = c
             if input.key(input.Keys.Rshift) || input.key(input.Keys.Lshift) then
                 c_tmp = shiftTable[c]
             end
-            debug_print(c_tmp)
-            #if c_tmp != empty then
+            #debug_print(c[0] + "\n")
+            if c_tmp != empty then
                 rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + c_tmp + rows[cursor_y][cursor_x:-1]
                 cursor_x += 1
-            #end
+            end
         end
         keyStates[c] = true
     end
@@ -209,6 +243,18 @@ function checkInput()
     if input.key(input.Keys.Num9) then processInputDown("9") ; else processInputUp("9")
     if input.key(input.Keys.Num0) then processInputDown("0") ; else processInputUp("0")
     if input.key(input.Keys.Space) then processInputDown(" ") ; else processInputUp(" ")
+    if input.key(input.Keys.Minus) then processInputDown("-") ; else processInputUp("-")
+    if input.key(input.Keys.Equals) then processInputDown("=") ; else processInputUp("=")
+    if input.key(input.Keys.Leftbracket) then processInputDown("[") ; else processInputUp("[")
+    if input.key(input.Keys.Rightbracket) then processInputDown("]") ; else processInputUp("]")
+    if input.key(input.Keys.Semicolon) then processInputDown(";") ; else processInputUp(";")
+    if input.key(input.Keys.Apostrophe) then processInputDown("'") ; else processInputUp("'")
+    if input.key(input.Keys.Backslash) then processInputDown("\\") ; else processInputUp("\\")
+    if input.key(input.Keys.Comma) then processInputDown(",") ; else processInputUp(",")
+    if input.key(input.Keys.Period) then processInputDown(".") ; else processInputUp(".")
+    if input.key(input.Keys.Slash) then processInputDown("/") ; else processInputUp("/")
+    if input.key(input.Keys.Grave) then processInputDown("`") ; else processInputUp("`")
+    if input.key(input.Keys.Tab) then processInputDown("tab") ; else processInputUp("tab")
 
     if input.key(input.Keys.Left) then processInputDown("left") ; else processInputUp("left")
     if input.key(input.Keys.Right) then processInputDown("right") ; else processInputUp("right")
@@ -225,7 +271,7 @@ end
 var cursor_x = 2, cursor_y = 2
 
 var running = true
-var state
+var lastKeyPress = 0
 while running do
     checkInput()
 
@@ -237,12 +283,12 @@ while running do
         draw.setColor(colors.White)
     end
 
-    #var time = timer.getTicks() / 500
-    #if time % 2 == 0 then
+    var time = timer.getTicks() / 500
+    if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
         draw.fillRect(1 + cursor_x * 6, 1 + cursor_y * fontHeight, 5, fontHeight - 1, colors.Gray)
-    #end
+    end
 
-    for i in 0..(numRows - 1) do
+    for i in 0..numRows - 1 do
         draw.textMono(1, 1 + i * fontHeight, rows[i])
     end
 

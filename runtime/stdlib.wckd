@@ -48,3 +48,8 @@ function stringToLowerCase()
     end
     return copy
 end
+
+(prototypeof string).startsWith = stringStartsWith
+function stringStartsWith(str)
+    return this.value[0:str.length() - 1] == str
+end
