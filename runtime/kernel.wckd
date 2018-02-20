@@ -33,8 +33,9 @@ for i in 0..numRows - 1 do
 end
 
 rows[0] = "Funky System"
-rows[1] = "---"
-rows[2] = "# "
+rows[1] = ""
+rows[2] = "READY"
+rows[3] = "# "
 
 var keyStates = {}
 
@@ -73,6 +74,7 @@ function processCommand(cmd)
     end
 
     print("# ")
+    commandHistoryIndex = 0
 end
 
 var shiftTable = {
@@ -268,7 +270,7 @@ function checkInput()
     if input.key(input.Keys.Return) then processInputDown("return") ; else processInputUp("return")
 end
 
-var cursor_x = 2, cursor_y = 2
+var cursor_x = 2, cursor_y = 3
 
 var running = true
 var lastKeyPress = 0
@@ -291,20 +293,6 @@ while running do
     for i in 0..numRows - 1 do
         draw.textMono(1, 1 + i * fontHeight, rows[i])
     end
-
-
-
-#    draw.text(10, 10, "1234567890")
-#    draw.text(10, 20, "Algemeen bekend Bas du Pre Come Dore Every")
-#    draw.text(10, 30, "Flute Goon Hi I'm John Kloot Lief More")
-#    draw.text(10, 40, "Nooit Over Prak Qwerty Risen State Toon")
-#    draw.text(10, 50, "Undefined Variable Welcome Xanadu")
-#    draw.text(10, 60, "You are \"Zion\", said he!?")
-#    draw.text(10, 70, "me@basdupre.com")
-#    draw.text(10, 80, "draw.setColor(colors.Purple[9])")
-#    draw.text(10, 90, "Price: $ 50,19 / 100")
-#    draw.text(10, 100, "The quick brown fox jumped over the lazy dog!?")
-#    draw.text(10, 110, "i = 1 + (4 - 5)")
 
     pump_events()
 end
