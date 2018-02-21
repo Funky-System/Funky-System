@@ -7,6 +7,7 @@
 
 #include "Funky5.fnt.h"
 #include "Funky7.fnt.h"
+#include "Funky9.fnt.h"
 
 static fs_display_t *display = NULL;
 
@@ -307,8 +308,9 @@ static void textMono(CPU_State *state) {
 
 static void setFont(CPU_State *state) {
     const char *name = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
-    if (strcmp(name, "8px") == 0) current_font = &Funky7;
-    else if (strcmp(name, "6px") == 0) current_font = &Funky5;
+    if (strcmp(name, "7px") == 0) current_font = &Funky7;
+    else if (strcmp(name, "5px") == 0) current_font = &Funky5;
+    else if (strcmp(name, "9px") == 0) current_font = &Funky9;
     else {
         fprintf(stderr, "Unknown font: %s\n", name);
     }
