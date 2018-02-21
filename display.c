@@ -11,23 +11,6 @@ const int scale = 3;
 const int SCREEN_WIDTH = 256;
 const int SCREEN_HEIGHT = 192;
 
-fs_font_t f = (fs_font_t) {
-        .name = "hoi",
-        .max_width = 5,
-        .height = 5,
-        .glyphs = (fs_glyph_t[]) {
-                {
-                        .width = 2,
-                        .height = 5,
-                        .character = 'a',
-                        .points = (fs_glyph_pixel_t[]) {
-                                { .x = 1, .y = 4 },
-                                { .x = 1, .y = 2 },
-                        }
-                }
-        }
-};
-
 fs_display_t display_init() {
     fs_display_t display = { 0 };
 

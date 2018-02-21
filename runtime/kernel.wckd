@@ -24,7 +24,7 @@ draw.setFont("9px")
 draw.setColor(colors.White)
 var fontHeight = 9
 
-var numRows = 192 / fontHeight
+var numRows = 192 / (fontHeight + 1)
 var rows = []
 rows[numRows - 1] = empty # create elements
 
@@ -255,7 +255,7 @@ function checkInput()
     if input.key(input.Keys.Comma) then processInputDown(",") ; else processInputUp(",")
     if input.key(input.Keys.Period) then processInputDown(".") ; else processInputUp(".")
     if input.key(input.Keys.Slash) then processInputDown("/") ; else processInputUp("/")
-    if input.key(input.Keys.Backquote) then processInputDown("`") ; else processInputUp("`")
+    if input.key(input.Keys.Grave) then processInputDown("`") ; else processInputUp("`")
     if input.key(input.Keys.Tab) then processInputDown("tab") ; else processInputUp("tab")
 
     if input.key(input.Keys.Left) then processInputDown("left") ; else processInputUp("left")
@@ -287,11 +287,11 @@ while running do
 
     var time = timer.getTicks() / 500
     if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
-        draw.fillRect(1 + cursor_x * 6, 1 + cursor_y * (fontHeight), 5, fontHeight - 1, colors.Gray)
+        draw.fillRect(1 + cursor_x * 6, 1 + cursor_y * (fontHeight + 1), 5, fontHeight - 1, colors.Gray)
     end
 
     for i in 0..numRows - 1 do
-        draw.textMono(1, 1 + i * fontHeight, rows[i])
+        draw.textMono(1, 1 + i * (fontHeight + 1), rows[i])
     end
 
     pump_events()
