@@ -1,0 +1,12 @@
+import draw
+import input
+import color
+
+export function update()
+    draw.cls(color.Names.Red)
+    draw.rect(10, 10, 10, 10, color.Names.Blue)
+
+    if input.key(input.Keys.Z) then
+        return true
+    end
+end

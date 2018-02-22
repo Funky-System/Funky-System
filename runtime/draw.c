@@ -32,7 +32,6 @@ static struct color_t colors[] = {
 fs_font_t *current_font = &Funky5;
 
 //   clip([x, y, w, h]) -- set screen clipping region
-//   cursor(x, y) -- set cursor and CR/LF margin position
 //   fget(n, [f]) -- get values of sprite flags
 //   flip() -- flip screen back buffer (30fps)
 //   fset(n, [f], v) -- set values of sprite flags
