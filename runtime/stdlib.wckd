@@ -31,6 +31,16 @@ function arrayDeleteAt(index)
     "
 end
 
+(prototypeof array).insertAt = arrayInsertAt
+function arrayInsertAt(index, value)
+    asm "
+        ld.arg 1
+        ld.local 0
+        ld.arg 0
+        arr.insert
+    "
+end
+
 (prototypeof string).toLowerCase = stringToLowerCase
 function stringToLowerCase()
     var copy = 0
@@ -49,7 +59,39 @@ function stringToLowerCase()
     return copy
 end
 
+(prototypeof array).contains = arrayContains
+function arrayContains(val)
+    for e in this.value do
+        if e == val then return true;
+    end
+    return false
+end
+
 (prototypeof string).startsWith = stringStartsWith
 function stringStartsWith(str)
     return this.value[0:str.length() - 1] == str
+end
+
+(prototypeof string).indexOf = stringIndexOf
+function stringIndexOf(str)
+    var len = str.length()
+    for i in 0..this.length() do
+        if this.value[i:i + len] == str then
+           return i
+        end
+    end
+    return empty
+end
+
+(prototypeof string).split = stringSplit
+function stringSplit(pat)
+    var str = this.value
+    var parts = []
+    var i
+    while (i = str.indexOf(pat)) != empty do
+        parts[] = str[0:i]
+        str = str[i + pat.length():-1]
+    end
+    parts[] = str
+    return parts
 end

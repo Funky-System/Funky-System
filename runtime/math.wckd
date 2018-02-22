@@ -1,0 +1,15 @@
+export function max(a, b)
+    if a > b then
+        return a
+    else
+        return b
+    end
+end
+
+export function min(a, b)
+    if a < b then
+        return a
+    else
+        return b
+    end
+end

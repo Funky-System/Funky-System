@@ -15,7 +15,7 @@ do
     wickedc "$file" -o $(basename -s .wckd "$file").funk
 done
 
-emcc -O2 ../../*.c ../../runtime/*.c -s USE_SDL=2 -o funky.html \
+emcc -O3 ../../*.c ../../runtime/*.c -s USE_SDL=2 -o funky.html \
     -I. \
     -I../../fonts \
     -I../../include \
@@ -29,7 +29,11 @@ emcc -O2 ../../*.c ../../runtime/*.c -s USE_SDL=2 -o funky.html \
     --embed-file stdlib.funk \
     --embed-file timer.funk \
     --embed-file console.funk \
+    --embed-file math.funk \
     --embed-file test_app.funk \
+    --embed-file editor.funk \
+    --embed-file editor_code.funk \
+    --embed-file editor_gfx.funk \
     \
     -s WASM=0 -s PRECISE_F32=1 \
     --shell-file ../shell.html

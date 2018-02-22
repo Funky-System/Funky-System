@@ -2,11 +2,115 @@ import draw
 import input
 import color
 
-export function update()
-    draw.cls(color.Names.Red)
-    draw.rect(10, 10, 10, 10, color.Names.Blue)
+import editor_code
+import editor_gfx
 
-    if input.key(input.Keys.Z) then
+function debug_print(str)
+    asm "
+        ld.arg 0
+        conv.str
+        syscall.byname \"debug_print\"
+        pop
+    "
+end
+
+enum Modes
+    Code, Gfx, Map, Sfx, Music
+end
+
+var mode = Modes.Code
+
+class BarButton
+    var caption = ""
+    var x, y, w, h
+
+    function new(x, y, w, h, caption = "")
+        this.caption = caption
+        this.x = x ; this.y = y ; this.w = w ; this.h = h
+    end
+
+    function draw(down = false)
+        if down then
+            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, color.Names.DarkGray) # fill
+            draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.DarkGray) # top
+            draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # left
+            draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.LightGray) # right
+            draw.fillRect(this.x + 1, this.y + this.h - 1, this.w - 2, 1, color.Names.LightGray) # bottom
+            draw.setFont("7px")
+            draw.text(this.x + 3, this.y + 3, this.caption, color.Names.White)
+        else
+            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, color.Names.Gray) # fill
+            draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.LightGray) # top
+            draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.LightGray) # left
+            draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # right
+            draw.fillRect(this.x + 1, this.y + this.h - 1, this.w - 2, 1, color.Names.DarkGray) # bottom
+            draw.setFont("7px")
+            draw.text(this.x + 3, this.y + 3, this.caption, color.Names.White)
+        end
+    end
+
+    function hitTest(down, x, y)
+        if x >= this.x && x <= this.x + this.w then
+            if y >= this.y && y <= this.y + this.h then
+                if down then
+                    this.draw(true)
+                else
+                    debug_print("click " + this.caption + "\n")
+                    this.draw(true)
+                end
+                return true
+            end
+        end
+        return false
+    end
+end
+
+var codeButton = new BarButton(2, 2, 40, 12, "Code")
+var gfxButton = new BarButton(44, 2, 40, 12, "Gfx")
+var mapButton = new BarButton(86, 2, 40, 12, "Map")
+var sfxButton = new BarButton(128, 2, 40, 12, "Sfx")
+var musicButton = new BarButton(170, 2, 40, 12, "Music")
+
+var leftButtonDown = false
+
+export function update()
+    draw.cls(color.Names.Black)
+
+    # editor
+    draw.fillRect(0, 16, 256, 180, color.Names.DarkGray)
+
+#    draw.text(100, 90, "mouse_x: " + input.mouseX())
+#    draw.text(100, 100, "mouse_y: " + input.mouseY())
+
+    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+    if input.leftButtonPressed() then
+        leftButtonDown = true
+        codeButton.hitTest(true, mouse_x, mouse_y)
+        gfxButton.hitTest(true, mouse_x, mouse_y)
+        mapButton.hitTest(true, mouse_x, mouse_y)
+        sfxButton.hitTest(true, mouse_x, mouse_y)
+        musicButton.hitTest(true, mouse_x, mouse_y)
+    else if leftButtonDown then
+        leftButtonDown = false
+        if codeButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Code ;
+        if gfxButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Gfx ;
+        if mapButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Map ;
+        if sfxButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Sfx ;
+        if musicButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Music ;
+    end
+
+    if mode == Modes.Code then editor_code.update() ;
+    if mode == Modes.Gfx then editor_gfx.update() ;
+
+    # tabbar
+    draw.fillRect(0, 0, 256, 16, color.Names.BlueGray) # background
+    codeButton.draw(mode == Modes.Code)
+    gfxButton.draw(mode == Modes.Gfx)
+    mapButton.draw(mode == Modes.Map)
+    sfxButton.draw(mode == Modes.Sfx)
+    musicButton.draw(mode == Modes.Music)
+
+    if input.key(input.Keys.F12) then
         return true
     end
 end

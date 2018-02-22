@@ -1,11 +1,72 @@
-import stdlib
 import draw
+import timer
 import color
 import input
-import timer
-import console
+import math
 
 var colors = color.Names
+
+var lines = [""]
+var cursor_x = 0, cursor_y = 0
+
+var lastKeyPress = -10000
+
+var scroll_x = 0, scroll_y = 0
+
+var leftButtonDown = false
+
+var keywords = ["function", "var", "end", "if", "for", "then", "do", "export", "import", "else", "while", "return", "empty", "true", "false", "this"]
+function drawLine(x, y, line)
+    var parts = line.split(" ")
+    for tok in parts do
+        if keywords.contains(tok) then
+            draw.setColor(colors.Orange)
+        else
+            draw.setColor(colors.White)
+        end
+        draw.textMono(x, y, tok)
+        x += (tok.length() + 1) * 6;
+    end
+end
+
+export function update()
+    checkInput()
+
+    draw.fillRect(0, 16, 256, 180, color.Names.DarkGray)
+
+    var lines_from = math.max(0, scroll_y / 9)
+    var lines_to = math.min(lines.length(), lines_from + 20)
+    var num_cols = (256 / 6 - 1)
+    var cols_from = math.max(0, scroll_x / 6)
+    var cols_to = cols_from + num_cols
+
+    if lines_from > lines_to then
+        lines_from = lines_to
+    end
+
+    draw.setColor(colors.White)
+    draw.setFont("7px")
+    for i in lines_from..lines_to do
+        drawLine(3 - scroll_x, 19 + 9 * (i - lines_from) - scroll_y % 9, lines[i])
+    end
+
+    var time = timer.getTicks() / 500
+    if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
+        draw.fillRect(2 + cursor_x * 6 - scroll_x, 19 + 9 * (cursor_y - lines_from) - scroll_y % 9, 1, 7, colors.White)
+    end
+
+    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+    if input.leftButtonPressed() then
+        leftButtonDown = true
+    else if leftButtonDown then
+        leftButtonDown = false
+        if mouse_y > 16 then
+            cursor_y = math.min(lines.length() - 1, (mouse_y - 16 + scroll_y) / 9)
+            cursor_x = math.min(lines[cursor_y].length(), (mouse_x + scroll_x) / 6)
+            lastKeyPress = timer.getTicks()
+        end
+    end
+end
 
 function debug_print(str)
     asm "
@@ -16,132 +77,27 @@ function debug_print(str)
     "
 end
 
-function pump_events()
-    asm "syscall.byname \"pump_events\""
-end
+function ensureCursorVisible()
+    var num_lines = (176 / 9 - 1)
+    var lines_from = math.max(0, scroll_y / 9)
+    var lines_to = lines_from + num_lines
 
-
-draw.setFont("9px")
-draw.setColor(colors.White)
-var fontHeight = 9
-
-var numRows = 192 / (fontHeight + 1)
-var rows = []
-rows[numRows - 1] = empty # create elements
-
-for i in 0..numRows - 1 do
-    rows[i] = ""
-end
-
-rows[0] = "Funky System 2018.1"
-rows[1] = ""
-rows[2] = "READY"
-rows[3] = "# "
-
-var keyStates = {}
-
-function print(str)
-    rows[cursor_y] = rows[cursor_y][0:cursor_x] + str
-    cursor_x += rows[cursor_y].length()
-end
-
-function newLine()
-    cursor_y += 1
-    cursor_x = 0
-    if cursor_y > numRows - 1 then
-        rows.deleteAt(0)
-        cursor_y = numRows - 1
-        rows[cursor_y] = ""
-    end
-end
-
-function printLine(line)
-    print(line)
-    newLine()
-end
-
-function module_exists(name)
-    var ret = 0
-    asm "
-        ld.arg 0
-        mod.exists
-        st.local 1
-    "
-    return ret
-end
-
-function module_loaded(name)
-    var ret = 0
-    asm "
-        ld.arg 0
-        mod.isloaded
-        st.local 1
-    "
-    return ret
-end
-
-function load_exe(cmd)
-    var updateFun
-    asm "
-        ld.arg 0
-        link.pop
-        dup
-        ld.mapitem \"@init\"
-        call.pop 0
-        ld.mapitem \"fupdate\"
-        is.empty
-        brtrue skipUpdate
-        st.local 1
-        exe_loop:
-        ld.local 1
-        call.pop 0
-        ld.reg %rr
-        brtrue skipUpdate
-        call pump_events, 0
-        jmp exe_loop
-        skipUpdate:
-        pop
-        ld.arg 0
-        unlink.pop
-    "
-end
-
-var commandHistory = []
-var commandHistoryIndex = 0
-function processCommand(cmd)
-    commandHistory[] = cmd
-    debug_print(cmd + "\n")
-
-    newLine()
-
-    if cmd == "" then
-        # do nothing
-    else if cmd == "exit" then
-         running = false
-    else if cmd == "test" then
-        console._setRows(rows)
-        console.setCursorPos(cursor_x, cursor_y)
-
-        console.printLine("Test 123")
-
-        cursor_x = console.getCursorPos().x
-        cursor_y = console.getCursorPos().y
-        rows = console._getRows()
-    else
-        if module_exists(cmd) && !module_loaded(cmd) then
-            console._setRows(rows)
-            console.setCursorPos(cursor_x, cursor_y)
-            load_exe(cmd)
-            cursor_x = console.getCursorPos().x
-            cursor_y = console.getCursorPos().y
-            rows = console._getRows()
-        else
-            printLine(cmd + ": Command not found")
-        end
+    if cursor_y >= lines_to - 1 then
+        scroll_y = math.max(scroll_y, (cursor_y - num_lines + 1) * 9)
+    else if cursor_y <= lines_from + 1 then
+        scroll_y = math.max(0, math.min(scroll_y, (cursor_y - 1) * 9))
     end
 
-    print("# ")
-    commandHistoryIndex = 0
+    var num_cols = (256 / 6 - 1)
+    var cols_from = math.max(0, scroll_x / 6)
+    var cols_to = cols_from + num_cols
+
+    if cursor_x >= cols_to - 1 then
+        scroll_x = math.max(scroll_x, (cursor_x - num_cols + 1) * 6)
+    else if cursor_x <= cols_from + 1 then
+        scroll_x = math.max(0, math.min(scroll_x, (cursor_x - 1) * 6))
+    end
+
 end
 
 var shiftTable = {
@@ -195,78 +151,82 @@ var shiftTable = {
     "`": "~"
 }
 
-var autocomplete_commands = ["exit", "test", "long_command"]
-
-function autocomplete()
-    var stringToCursor = rows[cursor_y][2:cursor_x]
-    for cmd in autocomplete_commands do
-        if cmd.startsWith(stringToCursor) then
-            var stringFromCursor = rows[cursor_y][cursor_x:-1]
-            rows[cursor_y] = rows[cursor_y][0:2] + cmd + stringFromCursor
-            cursor_x = cmd.length() + 2
-            return
-        end
-    end
-end
-
+var keyStates = {}
 function processInputDown(c)
     lastKeyPress = timer.getTicks()
     if keyStates[c] == empty then
         if c == "left" then
             cursor_x -= 1
-            if cursor_x < 2 then
-                cursor_x = 2
+            if cursor_x < 0 then
+                if cursor_y > 0 then
+                    cursor_y -= 1
+                    cursor_x = lines[cursor_y].length()
+                end
             end
+            if cursor_x < 0 then cursor_x = 0;
         else if c == "right" then
             cursor_x += 1
-            if cursor_x > rows[cursor_y].length() then
-                cursor_x = rows[cursor_y].length()
+            if cursor_x > lines[cursor_y].length() then
+                if cursor_y < lines.length() - 1 then
+                    cursor_x = 0
+                    cursor_y += 1
+                end
+                if cursor_x > lines[cursor_y].length() then cursor_x = lines[cursor_y].length();
             end
         else if c == "backspace" then
-            if cursor_x > 2 then
-                rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + rows[cursor_y][cursor_x:-1]
+            if cursor_x > 0 then
+                lines[cursor_y] = lines[cursor_y][0:cursor_x - 1] + lines[cursor_y][cursor_x:-1]
                 cursor_x -= 1
+            else
+                if cursor_y >= 1 then
+                    cursor_x = lines[cursor_y - 1].length()
+                    lines[cursor_y - 1] = lines[cursor_y - 1] + lines[cursor_y]
+                    lines.deleteAt(cursor_y)
+                    cursor_y -= 1
+                end
             end
         else if c == "home" then
-            cursor_x = 2
+            cursor_x = 0
         else if c == "end" then
-            cursor_x = rows[cursor_y].length()
+            cursor_x = lines[cursor_y].length()
         else if c == "delete" then
-            if cursor_x < rows[cursor_y].length() then
-                rows[cursor_y] = rows[cursor_y][0:cursor_x] + rows[cursor_y][cursor_x + 1:-1]
+            if cursor_x < lines[cursor_y].length() then
+                lines[cursor_y] = lines[cursor_y][0:cursor_x] + lines[cursor_y][cursor_x + 1:-1]
+            else
+                if cursor_y < lines.length() - 1 then
+                    lines[cursor_y] = lines[cursor_y] + lines[cursor_y + 1]
+                    lines.deleteAt(cursor_y + 1)
+                end
             end
         else if c == "up" then
-            commandHistoryIndex += 1
-            if (commandHistoryIndex > commandHistory.length()) then commandHistoryIndex = commandHistory.length()
-            rows[cursor_y] = "# "
-            if commandHistoryIndex >= 1 then
-                 rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
+            if cursor_y > 0 then
+                cursor_y -= 1
+                if cursor_x > lines[cursor_y].length() then cursor_x = lines[cursor_y].length();
             end
-            cursor_x = rows[cursor_y].length()
         else if c == "down" then
-            commandHistoryIndex -= 1
-            if (commandHistoryIndex < 0) then commandHistoryIndex = 0
-            rows[cursor_y] = "# "
-            if commandHistoryIndex >= 1 then
-                 rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
+            if cursor_y < lines.length() - 1 then
+                cursor_y += 1
+                if cursor_x > lines[cursor_y].length() then cursor_x = lines[cursor_y].length();
             end
-            cursor_x = rows[cursor_y].length()
         else if c == "return" then
-            processCommand(rows[cursor_y][2:-1])
+            lines.insertAt(cursor_y + 1, lines[cursor_y][cursor_x:-1])
+            lines[cursor_y] = lines[cursor_y][0:cursor_x]
+            cursor_y += 1
+            cursor_x = 0
         else if c == "tab" then
-            autocomplete()
+
         else
             var c_tmp = c
             if input.key(input.Keys.Rshift) || input.key(input.Keys.Lshift) then
                 c_tmp = shiftTable[c]
             end
-            #debug_print(c[0] + "\n")
             if c_tmp != empty then
-                rows[cursor_y] = rows[cursor_y][0:cursor_x] + c_tmp + rows[cursor_y][cursor_x:-1]
+                lines[cursor_y] = lines[cursor_y][0:cursor_x] + c_tmp + lines[cursor_y][cursor_x:-1]
                 cursor_x += 1
             end
         end
         keyStates[c] = true
+        ensureCursorVisible()
     end
 end
 
@@ -335,33 +295,9 @@ function checkInput()
     if input.key(input.Keys.Delete) then processInputDown("delete") ; else processInputUp("delete")
 
     if input.key(input.Keys.Return) then processInputDown("return") ; else processInputUp("return")
-end
 
-var cursor_x = 2, cursor_y = 3
-
-var running = true
-var lastKeyPress = -100000
-while running do
-    checkInput()
-
-    #processCommand("editor")
-
-    draw.cls(colors.Black)
-
-    if input.key(input.Keys.Z) then
-        draw.setColor(colors.Red)
-    else
-        draw.setColor(colors.White)
-    end
-
-    var time = timer.getTicks() / 500
-    if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
-        draw.fillRect(1 + cursor_x * 6, 1 + cursor_y * (fontHeight + 1), 5, fontHeight - 1, colors.Gray)
-    end
-
-    for i in 0..numRows do
-        draw.textMono(1, 1 + i * (fontHeight + 1), rows[i])
-    end
-
-    pump_events()
+    if input.key(input.Keys.F1) then scroll_y += 1 ;
+    if input.key(input.Keys.F2) then scroll_y = math.max(0, scroll_y - 1) ;
+    if input.key(input.Keys.F3) then scroll_x += 1 ;
+    if input.key(input.Keys.F4) then scroll_x = math.max(0, scroll_x - 1) ;
 end

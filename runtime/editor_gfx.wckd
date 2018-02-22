@@ -1,0 +1,5 @@
+import draw
+
+export function update()
+    draw.fillCircle(100, 100, 20, 3)
+end
