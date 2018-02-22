@@ -2,6 +2,12 @@
 #include <SDL2/SDL.h>
 
 #include <funkyvm/funkyvm.h>
+#include <funkyvm/memory.h>
+
+#ifdef FUNKY_VM_OS_EMSCRIPTEN
+#include <emscripten/emscripten.h>
+#pragma pack(1)
+#endif
 
 #include "funky_system.h"
 #include "display.h"
@@ -22,6 +28,8 @@ Uint32 tmr = 0;
 Uint32 num_frames = 0;
 float overhead = 0;
 float target_fps = 60;
+
+extern int vm_emscripten_running;
 
 void pump_events(CPU_State *state) {
     num_frames++;
@@ -49,17 +57,33 @@ void pump_events(CPU_State *state) {
         num_frames = 0;
     }
 
+    #ifdef FUNKY_VM_OS_EMSCRIPTEN
+        cpu_emscripten_yield(state);
+    #endif
 }
 
 fs_display_t *get_display() { return &display; }
 fs_input_t *get_input() { return &input; }
 
+
+static void run(void *arg) {
+    #ifdef FUNKY_VM_OS_EMSCRIPTEN
+    emscripten_cancel_main_loop();
+    #endif
+    display = display_init();
+    input = input_init();
+
+    vm_type_t ret = cpu_run((CPU_State*)arg);
+}
+
+static Memory memory;
+static CPU_State cpu_state;
+
 int main() {
     unsigned char *main_memory = malloc(VM_MEMORY_LIMIT);
-    Memory memory;
     memory_init(&memory, main_memory);
 
-    CPU_State cpu_state = cpu_init(&memory);
+    cpu_state = cpu_init(&memory);
 
     Module module = module_load_name(&cpu_state, "kernel");
     module_register(&cpu_state, module);
@@ -72,17 +96,19 @@ int main() {
     register_bindings_input(&cpu_state);
     register_bindings_timer(&cpu_state);
 
-    display = display_init();
-    input = input_init();
+    #ifdef FUNKY_VM_OS_EMSCRIPTEN
+        emscripten_set_main_loop_arg(&run, &cpu_state, 0, 0);
+    #else
+        run(&cpu_state);
 
-    vm_type_t ret = cpu_run(&cpu_state);
+        input_destroy(&input);
+        display_destroy(&display);
 
-    input_destroy(&input);
-    display_destroy(&display);
+        free(main_memory);
+        memory_destroy(&memory);
+        cpu_destroy(&cpu_state);
 
-    free(main_memory);
-    memory_destroy(&memory);
-    cpu_destroy(&cpu_state);
+        return 0;
+    #endif
 
-    return 0;
 }

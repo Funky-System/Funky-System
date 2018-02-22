@@ -10,3 +10,4 @@ CTestTestfile.cmake
 cmake-build-debug
 .idea
 build
+emscripten/emcc_build
