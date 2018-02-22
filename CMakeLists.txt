@@ -43,13 +43,7 @@ add_custom_target(
 )
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-add_custom_target(kernel wickedc ${CMAKE_CURRENT_SOURCE_DIR}/runtime/kernel.wckd -o ${CMAKE_CURRENT_BINARY_DIR}/kernel.funk)
-add_custom_target(stdlib wickedc ${CMAKE_CURRENT_SOURCE_DIR}/runtime/stdlib.wckd -o ${CMAKE_CURRENT_BINARY_DIR}/stdlib.funk)
-add_custom_target(draw wickedc ${CMAKE_CURRENT_SOURCE_DIR}/runtime/draw.wckd -o ${CMAKE_CURRENT_BINARY_DIR}/draw.funk)
-add_custom_target(input wickedc ${CMAKE_CURRENT_SOURCE_DIR}/runtime/input.wckd -o ${CMAKE_CURRENT_BINARY_DIR}/input.funk)
-add_custom_target(color wickedc ${CMAKE_CURRENT_SOURCE_DIR}/runtime/color.wckd -o ${CMAKE_CURRENT_BINARY_DIR}/color.funk)
-add_custom_target(timer wickedc ${CMAKE_CURRENT_SOURCE_DIR}/runtime/timer.wckd -o ${CMAKE_CURRENT_BINARY_DIR}/timer.funk)
-add_custom_target(runtime DEPENDS kernel stdlib draw input color timer)
+add_custom_target(runtime bash ${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh ${CMAKE_CURRENT_SOURCE_DIR}/runtime ${CMAKE_CURRENT_BINARY_DIR})
 
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})

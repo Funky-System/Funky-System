@@ -3,6 +3,7 @@ import draw
 import color
 import input
 import timer
+import console
 
 var colors = color.Names
 
@@ -32,7 +33,7 @@ for i in 0..numRows - 1 do
     rows[i] = ""
 end
 
-rows[0] = "Funky System"
+rows[0] = "Funky System 2018.1"
 rows[1] = ""
 rows[2] = "READY"
 rows[3] = "# "
@@ -59,6 +60,35 @@ function printLine(line)
     newLine()
 end
 
+function module_exists(name)
+    var ret = 0
+    asm "
+        ld.arg 0
+        mod.exists
+        st.local 1
+    "
+    return ret
+end
+
+function module_loaded(name)
+    var ret = 0
+    asm "
+        ld.arg 0
+        mod.isloaded
+        st.local 1
+    "
+    return ret
+end
+
+function load_exe(cmd)
+    asm "
+        ld.arg 0
+        link.pop
+        ld.mapitem \"@init\"
+        call.pop 0
+    "
+end
+
 var commandHistory = []
 var commandHistoryIndex = 0
 function processCommand(cmd)
@@ -67,10 +97,30 @@ function processCommand(cmd)
 
     newLine()
 
-    if cmd == "exit" then
-        running = false
+    if cmd == "" then
+        # do nothing
+    else if cmd == "exit" then
+         running = false
+    else if cmd == "test" then
+        console._setRows(rows)
+        console.setCursorPos(cursor_x, cursor_y)
+
+        console.printLine("Test 123")
+
+        cursor_x = console.getCursorPos().x
+        cursor_y = console.getCursorPos().y
+        rows = console._getRows()
     else
-        printLine(cmd)
+        if module_exists(cmd) && !module_loaded(cmd) then
+            console._setRows(rows)
+            console.setCursorPos(cursor_x, cursor_y)
+            load_exe(cmd)
+            cursor_x = console.getCursorPos().x
+            cursor_y = console.getCursorPos().y
+            rows = console._getRows()
+        else
+            printLine(cmd + ": Command not found")
+        end
     end
 
     print("# ")
@@ -273,7 +323,7 @@ end
 var cursor_x = 2, cursor_y = 3
 
 var running = true
-var lastKeyPress = 0
+var lastKeyPress = -100000
 while running do
     checkInput()
 

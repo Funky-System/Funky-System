@@ -1,0 +1,41 @@
+var rows
+var numRows
+
+export function _setRows(rs)
+    rows = rs
+    numRows = rows.length()
+end
+
+export function _getRows()
+    return rows
+end
+
+var cursor_x, cursor_y
+export function setCursorPos(x, y)
+    cursor_x = x
+    cursor_y = y
+end
+
+export function print(str)
+    rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + str
+    cursor_x += rows[cursor_y].length()
+end
+
+export function newLine()
+    cursor_y += 1
+    cursor_x = 0
+    if cursor_y > numRows - 1 then
+        rows.deleteAt(0)
+        cursor_y = numRows - 1
+        rows[cursor_y] = ""
+    end
+end
+
+export function printLine(line)
+    print(line)
+    newLine()
+end
+
+export function getCursorPos()
+    return { "x": cursor_x, "y": cursor_y }
+end

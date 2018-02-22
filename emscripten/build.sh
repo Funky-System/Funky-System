@@ -28,6 +28,8 @@ emcc -O2 ../../*.c ../../runtime/*.c -s USE_SDL=2 -o funky.html \
     --embed-file input.funk \
     --embed-file stdlib.funk \
     --embed-file timer.funk \
+    --embed-file console.funk \
+    --embed-file test_app.funk \
     \
     -s WASM=0 -s PRECISE_F32=1 \
     --shell-file ../shell.html
