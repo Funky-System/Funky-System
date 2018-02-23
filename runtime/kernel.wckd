@@ -344,7 +344,7 @@ var lastKeyPress = -100000
 while running do
     checkInput()
 
-    #processCommand("editor")
+    processCommand("editor")
 
     draw.cls(colors.Black)
 

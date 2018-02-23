@@ -1,3 +1,16 @@
+function debug_print(str)
+    asm "
+        ld.arg 0
+        conv.str
+        syscall.byname \"debug_print\"
+        pop
+    "
+end
+
+############
+## ARRAYS ##
+############
+
 (prototypeof array).length = arrayLength
 function arrayLength()
     var length = 0
@@ -5,18 +18,6 @@ function arrayLength()
         ld.local 0
         ld.mapitem \"value\"
         arr.len
-        st.local 1
-    "
-    return length
-end
-
-(prototypeof string).length = stringLength
-function stringLength()
-    var length = 0
-    asm "
-        ld.local 0
-        ld.mapitem \"value\"
-        str.len
         st.local 1
     "
     return length
@@ -41,6 +42,30 @@ function arrayInsertAt(index, value)
     "
 end
 
+(prototypeof array).contains = arrayContains
+function arrayContains(val)
+    for e in this.value do
+        if e == val then return true;
+    end
+    return false
+end
+
+#############
+## STRINGS ##
+#############
+
+(prototypeof string).length = stringLength
+function stringLength()
+    var length = 0
+    asm "
+        ld.local 0
+        ld.mapitem \"value\"
+        str.len
+        st.local 1
+    "
+    return length
+end
+
 (prototypeof string).toLowerCase = stringToLowerCase
 function stringToLowerCase()
     var copy = 0
@@ -51,7 +76,7 @@ function stringToLowerCase()
         str.concat
         st.local 1
     "
-    for i in 0..copy.length() - 1 do
+    for i in 0..copy.length() do
         if copy[i] >= 65 && copy[i] <= 90 then
             copy[i] += 32;
         end
@@ -59,17 +84,14 @@ function stringToLowerCase()
     return copy
 end
 
-(prototypeof array).contains = arrayContains
-function arrayContains(val)
-    for e in this.value do
-        if e == val then return true;
-    end
-    return false
-end
-
 (prototypeof string).startsWith = stringStartsWith
 function stringStartsWith(str)
-    return this.value[0:str.length() - 1] == str
+    return this.value[0:str.length()] == str
+end
+
+(prototypeof string).endsWith = stringEndsWith
+function stringEndsWith(str)
+    return this.value[-str.length() - 1: -1] == str
 end
 
 (prototypeof string).indexOf = stringIndexOf
@@ -94,4 +116,72 @@ function stringSplit(pat)
     end
     parts[] = str
     return parts
+end
+
+(prototypeof string).isDigits = stringIsDigits
+function stringIsDigits()
+    for i in 0..this.length() do
+        if this.value[i] < 48 || this.value[i] > 58 then
+            return false
+        end
+    end
+    return true
+end
+
+(prototypeof string).isSpaces = stringIsSpaces
+function stringIsSpaces()
+    for i in 0..this.length() do
+        if this.value[i] != 32 then
+            return false
+        end
+    end
+    return true
+end
+
+(prototypeof string).repeat = stringRepeat
+function stringRepeat(n)
+    var str = ""
+    for i in 0..n do str += this
+    return str
+end
+
+(prototypeof string).trimLeft = stringTrimLeft
+function stringTrimLeft(arr = [" ", "\t", "\n"])
+    var str = this.value
+
+    var trimmed
+    do
+        trimmed = false
+        for tok in arr do
+            if str[0:tok.length()] == tok then
+                str = str[tok.length():-1]
+                trimmed = true
+            end
+        end
+    loop while trimmed
+
+    return str
+end
+
+(prototypeof string).trimRight = stringTrimRight
+function stringTrimRight(arr = [" ", "\t", "\n"])
+    var str = this.value
+
+    var trimmed
+    do
+        trimmed = false
+        for tok in arr do
+            if str[-(tok.length() + 1): -1] == tok then
+                str = str[0:-(tok.length() + 1)]
+                trimmed = true
+            end
+        end
+    loop while trimmed
+
+    return str
+end
+
+(prototypeof string).trim = stringTrim
+function stringTrim(arr)
+    return this.trimLeft(arr).trimRight(arr)
 end

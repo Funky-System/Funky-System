@@ -15,7 +15,7 @@ var scroll_x = 0, scroll_y = 0
 
 var leftButtonDown = false
 
-var keywords = ["function", "var", "end", "if", "for", "then", "do", "export", "import", "else", "while", "return", "empty", "true", "false", "this"]
+var keywords = ["function", "var", "end", "if", "for", "then", "do", "export", "import", "else", "while", "return", "empty", "true", "false", "this", "class", "syscall", "extends", "new", "string"]
 function drawLine(x, y, line)
     var parts = line.split(" ")
     for tok in parts do
@@ -100,6 +100,68 @@ function ensureCursorVisible()
 
 end
 
+## Check if we must autoindent this line
+function checkAutoIndent()
+#    TODO
+#    var indentation = 0
+#
+#    for i in 1..lines[cursor_y - 1].length() do
+#        if lines[cursor_y - 1][0:i].isSpaces() then
+#            indentation = i
+#        else
+#            break
+#        end
+#    end
+#
+#    var oldIndentation = indentation
+#
+#    if lines[cursor_y].trim() == "end" then
+#        indentation -= tabSize
+#    end
+
+end
+
+## Auto indent after return
+function autoIndentReturn()
+    if lines[cursor_y - 1].length() == 0 then
+        return
+    end
+
+    var indentation = 0
+    for i in 1..lines[cursor_y - 1].length() + 1 do
+        if lines[cursor_y - 1][0:i].isSpaces() then
+            indentation = i
+        else
+            break
+        end
+    end
+
+    if lines[cursor_y - 1].trim().startsWith("function ") && lines[cursor_y - 1].trim().endsWith(")") then
+        indentation += tabSize
+    end
+
+    if lines[cursor_y - 1].trim().startsWith("if ") && lines[cursor_y - 1].trim().endsWith(" then") then
+        indentation += tabSize
+    end
+
+    if lines[cursor_y - 1].trim().startsWith("for ") && lines[cursor_y - 1].trim().endsWith(" do") then
+        indentation += tabSize
+    end
+
+    if lines[cursor_y - 1].trim().startsWith("while ") && lines[cursor_y - 1].trim().endsWith(" do") then
+        indentation += tabSize
+    end
+
+    if lines[cursor_y - 1].trim().startsWith("class ") then
+        indentation += tabSize
+    end
+
+    if indentation > 0 then
+        lines[cursor_y] = " ".repeat(indentation) + lines[cursor_y]
+        cursor_x += indentation
+    end
+end
+
 var shiftTable = {
     "a": "A",
     "b": "B",
@@ -150,6 +212,8 @@ var shiftTable = {
     "/": "?",
     "`": "~"
 }
+
+var tabSize = 2
 
 var keyStates = {}
 function processInputDown(c)
@@ -213,9 +277,10 @@ function processInputDown(c)
             lines[cursor_y] = lines[cursor_y][0:cursor_x]
             cursor_y += 1
             cursor_x = 0
+            autoIndentReturn()
         else if c == "tab" then
             var tabs = ""
-            for i in 0..(4-(cursor_x%4)) do
+            for i in 0..(tabSize-(cursor_x % tabSize)) do
                 tabs += " "
             end
             lines[cursor_y] = lines[cursor_y][0:cursor_x] + tabs + lines[cursor_y][cursor_x:-1]
@@ -228,6 +293,8 @@ function processInputDown(c)
             if c_tmp != empty then
                 lines[cursor_y] = lines[cursor_y][0:cursor_x] + c_tmp + lines[cursor_y][cursor_x:-1]
                 cursor_x += 1
+
+                checkAutoIndent()
             end
         end
         keyStates[c] = true
