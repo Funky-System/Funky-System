@@ -3,6 +3,9 @@ project(Funky-System C)
 
 include(ExternalProject)
 
+add_definitions(-DVM_ARCH_BITS=64)
+add_definitions(-DVM_NATIVE_MALLOC=1)
+
 set(CMAKE_C_STANDARD 11)
 
 ExternalProject_Add(

@@ -80,7 +80,11 @@ static Memory memory;
 static CPU_State cpu_state;
 
 int main() {
-    unsigned char *main_memory = malloc(VM_MEMORY_LIMIT);
+    #if defined(VM_NATIVE_MALLOC) && VM_NATIVE_MALLOC
+        unsigned char *main_memory = 0;
+    #else
+        unsigned char *main_memory = malloc(VM_MEMORY_LIMIT);
+    #endif
     memory_init(&memory, main_memory);
 
     cpu_state = cpu_init(&memory);
