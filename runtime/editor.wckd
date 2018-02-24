@@ -23,15 +23,17 @@ var mode = Modes.Code
 class BarButton
     var caption = ""
     var x, y, w, h
+    var bgUp, bgDown
 
-    function new(x, y, w, h, caption = "")
+    function new(x, y, w, h, caption = "", bgUp = color.Names.Gray, bgDown = color.Names.DarkGray)
         this.caption = caption
         this.x = x ; this.y = y ; this.w = w ; this.h = h
+        this.bgUp = bgUp ; this.bgDown = bgDown
     end
 
     function draw(down = false)
         if down then
-            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, color.Names.DarkGray) # fill
+            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.bgDown) # fill
             draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.DarkGray) # top
             draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # left
             draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.LightGray) # right
@@ -39,7 +41,7 @@ class BarButton
             draw.setFont("7px")
             draw.text(this.x + 3, this.y + 3, this.caption, color.Names.White)
         else
-            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, color.Names.Gray) # fill
+            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.bgUp) # fill
             draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.LightGray) # top
             draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.LightGray) # left
             draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # right
@@ -65,18 +67,18 @@ class BarButton
     end
 end
 
-var codeButton = new BarButton(2, 2, 40, 12, "Code")
-var gfxButton = new BarButton(44, 2, 40, 12, "Gfx")
-var mapButton = new BarButton(86, 2, 40, 12, "Map")
-var sfxButton = new BarButton(128, 2, 40, 12, "Sfx")
-var musicButton = new BarButton(170, 2, 40, 12, "Music")
+var codeButton = new BarButton(2, 2, 40, 12, "Code", color.Names.Gray, color.Names.DarkGray)
+var gfxButton = new BarButton(44, 2, 40, 12, "Gfx", color.Names.ForestGreen, color.Names.DarkGreen)
+var mapButton = new BarButton(86, 2, 40, 12, "Map", color.Names.DarkRed, color.Names.Bordeaux)
+var sfxButton = new BarButton(128, 2, 40, 12, "Sfx", color.Names.LightBrown, color.Names.Brown)
+var musicButton = new BarButton(170, 2, 40, 12, "Music", color.Names.SteelBlue, color.Names.DarkBlue)
 
 var leftButtonDown = false
 
 export function update()
     draw.cls(color.Names.Black)
 
-    # editor
+    # editor BG
     draw.fillRect(0, 16, 256, 180, color.Names.DarkGray)
 
 #    draw.text(100, 90, "mouse_x: " + input.mouseX())
@@ -103,7 +105,14 @@ export function update()
     if mode == Modes.Gfx then editor_gfx.update() ;
 
     # tabbar
-    draw.fillRect(0, 0, 256, 16, color.Names.BlueGray) # background
+    var barColor
+    if mode == Modes.Code then barColor = color.Names.BlueGray
+    if mode == Modes.Gfx then barColor = color.Names.ForestGreen
+    if mode == Modes.Map then barColor = color.Names.DarkRed
+    if mode == Modes.Sfx then barColor = color.Names.LightBrown
+    if mode == Modes.Music then barColor = color.Names.Blue
+
+    draw.fillRect(0, 0, 256, 16, barColor) # background
     codeButton.draw(mode == Modes.Code)
     gfxButton.draw(mode == Modes.Gfx)
     mapButton.draw(mode == Modes.Map)
