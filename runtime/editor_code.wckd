@@ -15,17 +15,27 @@ var scroll_x = 0, scroll_y = 0
 
 var leftButtonDown = false
 
-var keywords = ["function", "var", "end", "if", "for", "then", "do", "export", "import", "else", "while", "return", "empty", "true", "false", "this", "class", "syscall", "extends", "new", "string"]
+var keywords = [
+    "function", "var", "end", "if", "for", "then", "do", "export",
+    "import", "else", "while", "return", "empty", "true", "false",
+    "this", "class", "syscall", "extends", "new", "string"
+    ]
 function drawLine(x, y, line)
-    var parts = line.split(" ")
+    var parts = line.splitAny([" ", "(", ")", "[", "]", "-", "+", ",", "{", "}"], true)
+    #var parts = line.split(" ", true)
+    parts[-1] = parts[-1] + " "
     for tok in parts do
-        if keywords.contains(tok) then
+        if keywords.contains(tok[0:-2]) then
             draw.setColor(colors.Orange)
+        else if tok[0:-2].isNumeric() then
+            draw.setColor(colors.LightBlue)
         else
             draw.setColor(colors.White)
         end
-        draw.textMono(x, y, tok)
-        x += (tok.length() + 1) * 6;
+        draw.textMono(x, y, tok[0:-2])
+        x += (tok.length() - 1) * 6
+        draw.textMono(x, y, tok[-2:-1], colors.White)
+        x += 6;
     end
 end
 

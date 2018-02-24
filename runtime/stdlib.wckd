@@ -105,14 +105,50 @@ function stringIndexOf(str)
     return empty
 end
 
+(prototypeof string).indexOfAny = stringIndexOfAny
+function stringIndexOfAny(strArray)
+    var first = -1
+    var firstStr = ""
+    for str in strArray do
+        var i = this.indexOf(str)
+        if i != empty && (first == -1 || i < first) then
+            first = i
+            firstStr = str
+        end
+    end
+    if first == -1 then return empty
+    return { "index": first, "token": firstStr }
+end
+
 (prototypeof string).split = stringSplit
-function stringSplit(pat)
+function stringSplit(pat, includePat = false)
     var str = this.value
     var parts = []
     var i
     while (i = str.indexOf(pat)) != empty do
-        parts[] = str[0:i]
+        if includePat then
+            parts[] = str[0:i + pat.length()]
+        else
+            parts[] = str[0:i]
+        end
         str = str[i + pat.length():-1]
+    end
+    parts[] = str
+    return parts
+end
+
+(prototypeof string).splitAny = stringSplitAny
+function stringSplitAny(patArray, includePat = false)
+    var str = this.value
+    var parts = []
+    var i
+    while (i = str.indexOfAny(patArray)) != empty do
+        if includePat then
+            parts[] = str[0:i.index] + i.token
+        else
+            parts[] = str[0:i.index]
+        end
+        str = str[i.index + i.token.length():-1]
     end
     parts[] = str
     return parts
@@ -122,6 +158,25 @@ end
 function stringIsDigits()
     for i in 0..this.length() do
         if this.value[i] < 48 || this.value[i] > 58 then
+            return false
+        end
+    end
+    return true
+end
+
+(prototypeof string).isNumeric = stringIsNumeric
+function stringIsNumeric()
+    var foundPeriod = false
+    for i in 0..this.length() do
+        if this.value[i] >= 48 && this.value[i] <= 58 then
+            # yay digit!
+        else if this.value[i] == '.' then
+            # period
+            if foundPeriod then return false;
+            foundPeriod = true
+        else if i == 0 && (this.value[i] == '+' || this.value[i] == '-') && this.length() > 1 then
+            # prefix unary
+        else
             return false
         end
     end
