@@ -110,9 +110,9 @@ int main() {
         input_destroy(&input);
         display_destroy(&display);
 
-        free(main_memory);
-        memory_destroy(&memory);
         cpu_destroy(&cpu_state);
+        memory_destroy(&memory);
+        free(main_memory);
 
         return 0;
     #endif
