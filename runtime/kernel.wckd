@@ -4,7 +4,9 @@ import color
 import input
 import timer
 import console
+import keyboard
 
+var shiftTable = keyboard.getShiftTable()
 var colors = color.Names
 
 function debug_print(str)
@@ -37,8 +39,6 @@ rows[0] = "Funky System 2018.1"
 rows[1] = ""
 rows[2] = "READY"
 rows[3] = "# "
-
-var keyStates = {}
 
 function print(str)
     rows[cursor_y] = rows[cursor_y][0:cursor_x] + str
@@ -144,57 +144,6 @@ function processCommand(cmd)
     commandHistoryIndex = 0
 end
 
-var shiftTable = {
-    "a": "A",
-    "b": "B",
-    "c": "C",
-    "d": "D",
-    "e": "E",
-    "f": "F",
-    "g": "G",
-    "h": "H",
-    "i": "I",
-    "j": "J",
-    "k": "K",
-    "l": "L",
-    "m": "M",
-    "n": "N",
-    "o": "O",
-    "p": "P",
-    "q": "Q",
-    "r": "R",
-    "s": "S",
-    "t": "T",
-    "u": "U",
-    "v": "V",
-    "w": "W",
-    "x": "X",
-    "y": "Y",
-    "z": "Z",
-    "1": "!",
-    "2": "@",
-    "3": "#",
-    "4": "$",
-    "5": "%",
-    "6": "^",
-    "7": "&",
-    "8": "*",
-    "9": "(",
-    "0": ")",
-    " ": " ",
-    "-": "_",
-    "=": "+",
-    "[": "{",
-    "]": "}",
-    ";": ":",
-    "'": "\"",
-    "\\": "|",
-    ",": "<",
-    ".": ">",
-    "/": "?",
-    "`": "~"
-}
-
 var autocomplete_commands = ["exit", "test", "long_command"]
 
 function autocomplete()
@@ -209,132 +158,125 @@ function autocomplete()
     end
 end
 
-function processInputDown(c)
+function processInput(c)
     lastKeyPress = timer.getTicks()
-    if keyStates[c] == empty then
-        if c == "left" then
-            cursor_x -= 1
-            if cursor_x < 2 then
-                cursor_x = 2
-            end
-        else if c == "right" then
-            cursor_x += 1
-            if cursor_x > rows[cursor_y].length() then
-                cursor_x = rows[cursor_y].length()
-            end
-        else if c == "backspace" then
-            if cursor_x > 2 then
-                rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + rows[cursor_y][cursor_x:-1]
-                cursor_x -= 1
-            end
-        else if c == "home" then
+    if c == "left" then
+        cursor_x -= 1
+        if cursor_x < 2 then
             cursor_x = 2
-        else if c == "end" then
-            cursor_x = rows[cursor_y].length()
-        else if c == "delete" then
-            if cursor_x < rows[cursor_y].length() then
-                rows[cursor_y] = rows[cursor_y][0:cursor_x] + rows[cursor_y][cursor_x + 1:-1]
-            end
-        else if c == "up" then
-            commandHistoryIndex += 1
-            if (commandHistoryIndex > commandHistory.length()) then commandHistoryIndex = commandHistory.length()
-            rows[cursor_y] = "# "
-            if commandHistoryIndex >= 1 then
-                 rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
-            end
-            cursor_x = rows[cursor_y].length()
-        else if c == "down" then
-            commandHistoryIndex -= 1
-            if (commandHistoryIndex < 0) then commandHistoryIndex = 0
-            rows[cursor_y] = "# "
-            if commandHistoryIndex >= 1 then
-                 rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
-            end
-            cursor_x = rows[cursor_y].length()
-        else if c == "return" then
-            processCommand(rows[cursor_y][2:-1])
-        else if c == "tab" then
-            autocomplete()
-        else
-            var c_tmp = c
-            if input.key(input.Keys.Rshift) || input.key(input.Keys.Lshift) then
-                c_tmp = shiftTable[c]
-            end
-            #debug_print(c[0] + "\n")
-            if c_tmp != empty then
-                rows[cursor_y] = rows[cursor_y][0:cursor_x] + c_tmp + rows[cursor_y][cursor_x:-1]
-                cursor_x += 1
-            end
         end
-        keyStates[c] = true
+    else if c == "right" then
+        cursor_x += 1
+        if cursor_x > rows[cursor_y].length() then
+            cursor_x = rows[cursor_y].length()
+        end
+    else if c == "backspace" then
+        if cursor_x > 2 then
+            rows[cursor_y] = rows[cursor_y][0:cursor_x - 1] + rows[cursor_y][cursor_x:-1]
+            cursor_x -= 1
+        end
+    else if c == "home" then
+        cursor_x = 2
+    else if c == "end" then
+        cursor_x = rows[cursor_y].length()
+    else if c == "delete" then
+        if cursor_x < rows[cursor_y].length() then
+            rows[cursor_y] = rows[cursor_y][0:cursor_x] + rows[cursor_y][cursor_x + 1:-1]
+        end
+    else if c == "up" then
+        commandHistoryIndex += 1
+        if (commandHistoryIndex > commandHistory.length()) then commandHistoryIndex = commandHistory.length()
+        rows[cursor_y] = "# "
+        if commandHistoryIndex >= 1 then
+             rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
+        end
+        cursor_x = rows[cursor_y].length()
+    else if c == "down" then
+        commandHistoryIndex -= 1
+        if (commandHistoryIndex < 0) then commandHistoryIndex = 0
+        rows[cursor_y] = "# "
+        if commandHistoryIndex >= 1 then
+             rows[cursor_y] += commandHistory[commandHistory.length() - commandHistoryIndex]
+        end
+        cursor_x = rows[cursor_y].length()
+    else if c == "return" then
+        processCommand(rows[cursor_y][2:-1])
+    else if c == "tab" then
+        autocomplete()
+    else
+        var c_tmp = c
+        if input.key(input.Keys.Rshift) || input.key(input.Keys.Lshift) then
+            c_tmp = shiftTable[c]
+        end
+        #debug_print(c[0] + "\n")
+        if c_tmp != empty then
+            rows[cursor_y] = rows[cursor_y][0:cursor_x] + c_tmp + rows[cursor_y][cursor_x:-1]
+            cursor_x += 1
+        end
     end
 end
 
-function processInputUp(c)
-    keyStates[c] = empty
-end
-
 function checkInput()
-    if input.key(input.Keys.A) then processInputDown("a") ; else processInputUp("a")
-    if input.key(input.Keys.B) then processInputDown("b") ; else processInputUp("b")
-    if input.key(input.Keys.C) then processInputDown("c") ; else processInputUp("c")
-    if input.key(input.Keys.D) then processInputDown("d") ; else processInputUp("d")
-    if input.key(input.Keys.E) then processInputDown("e") ; else processInputUp("e")
-    if input.key(input.Keys.F) then processInputDown("f") ; else processInputUp("f")
-    if input.key(input.Keys.G) then processInputDown("g") ; else processInputUp("g")
-    if input.key(input.Keys.H) then processInputDown("h") ; else processInputUp("h")
-    if input.key(input.Keys.I) then processInputDown("i") ; else processInputUp("i")
-    if input.key(input.Keys.J) then processInputDown("j") ; else processInputUp("j")
-    if input.key(input.Keys.K) then processInputDown("k") ; else processInputUp("k")
-    if input.key(input.Keys.L) then processInputDown("l") ; else processInputUp("l")
-    if input.key(input.Keys.M) then processInputDown("m") ; else processInputUp("m")
-    if input.key(input.Keys.N) then processInputDown("n") ; else processInputUp("n")
-    if input.key(input.Keys.O) then processInputDown("o") ; else processInputUp("o")
-    if input.key(input.Keys.P) then processInputDown("p") ; else processInputUp("p")
-    if input.key(input.Keys.Q) then processInputDown("q") ; else processInputUp("q")
-    if input.key(input.Keys.R) then processInputDown("r") ; else processInputUp("r")
-    if input.key(input.Keys.S) then processInputDown("s") ; else processInputUp("s")
-    if input.key(input.Keys.T) then processInputDown("t") ; else processInputUp("t")
-    if input.key(input.Keys.U) then processInputDown("u") ; else processInputUp("u")
-    if input.key(input.Keys.V) then processInputDown("v") ; else processInputUp("v")
-    if input.key(input.Keys.W) then processInputDown("w") ; else processInputUp("w")
-    if input.key(input.Keys.X) then processInputDown("x") ; else processInputUp("x")
-    if input.key(input.Keys.Y) then processInputDown("y") ; else processInputUp("y")
-    if input.key(input.Keys.Z) then processInputDown("z") ; else processInputUp("z")
-    if input.key(input.Keys.Num1) then processInputDown("1") ; else processInputUp("1")
-    if input.key(input.Keys.Num2) then processInputDown("2") ; else processInputUp("2")
-    if input.key(input.Keys.Num3) then processInputDown("3") ; else processInputUp("3")
-    if input.key(input.Keys.Num4) then processInputDown("4") ; else processInputUp("4")
-    if input.key(input.Keys.Num5) then processInputDown("5") ; else processInputUp("5")
-    if input.key(input.Keys.Num6) then processInputDown("6") ; else processInputUp("6")
-    if input.key(input.Keys.Num7) then processInputDown("7") ; else processInputUp("7")
-    if input.key(input.Keys.Num8) then processInputDown("8") ; else processInputUp("8")
-    if input.key(input.Keys.Num9) then processInputDown("9") ; else processInputUp("9")
-    if input.key(input.Keys.Num0) then processInputDown("0") ; else processInputUp("0")
-    if input.key(input.Keys.Space) then processInputDown(" ") ; else processInputUp(" ")
-    if input.key(input.Keys.Minus) then processInputDown("-") ; else processInputUp("-")
-    if input.key(input.Keys.Equals) then processInputDown("=") ; else processInputUp("=")
-    if input.key(input.Keys.Leftbracket) then processInputDown("[") ; else processInputUp("[")
-    if input.key(input.Keys.Rightbracket) then processInputDown("]") ; else processInputUp("]")
-    if input.key(input.Keys.Semicolon) then processInputDown(";") ; else processInputUp(";")
-    if input.key(input.Keys.Apostrophe) then processInputDown("'") ; else processInputUp("'")
-    if input.key(input.Keys.Backslash) then processInputDown("\\") ; else processInputUp("\\")
-    if input.key(input.Keys.Comma) then processInputDown(",") ; else processInputUp(",")
-    if input.key(input.Keys.Period) then processInputDown(".") ; else processInputUp(".")
-    if input.key(input.Keys.Slash) then processInputDown("/") ; else processInputUp("/")
-    if input.key(input.Keys.Grave) then processInputDown("`") ; else processInputUp("`")
-    if input.key(input.Keys.Tab) then processInputDown("tab") ; else processInputUp("tab")
+    if input.keyPress(input.Keys.A) then processInput("a")
+    if input.keyPress(input.Keys.B) then processInput("b")
+    if input.keyPress(input.Keys.C) then processInput("c")
+    if input.keyPress(input.Keys.D) then processInput("d")
+    if input.keyPress(input.Keys.E) then processInput("e")
+    if input.keyPress(input.Keys.F) then processInput("f")
+    if input.keyPress(input.Keys.G) then processInput("g")
+    if input.keyPress(input.Keys.H) then processInput("h")
+    if input.keyPress(input.Keys.I) then processInput("i")
+    if input.keyPress(input.Keys.J) then processInput("j")
+    if input.keyPress(input.Keys.K) then processInput("k")
+    if input.keyPress(input.Keys.L) then processInput("l")
+    if input.keyPress(input.Keys.M) then processInput("m")
+    if input.keyPress(input.Keys.N) then processInput("n")
+    if input.keyPress(input.Keys.O) then processInput("o")
+    if input.keyPress(input.Keys.P) then processInput("p")
+    if input.keyPress(input.Keys.Q) then processInput("q")
+    if input.keyPress(input.Keys.R) then processInput("r")
+    if input.keyPress(input.Keys.S) then processInput("s")
+    if input.keyPress(input.Keys.T) then processInput("t")
+    if input.keyPress(input.Keys.U) then processInput("u")
+    if input.keyPress(input.Keys.V) then processInput("v")
+    if input.keyPress(input.Keys.W) then processInput("w")
+    if input.keyPress(input.Keys.X) then processInput("x")
+    if input.keyPress(input.Keys.Y) then processInput("y")
+    if input.keyPress(input.Keys.Z) then processInput("z")
+    if input.keyPress(input.Keys.Num1) then processInput("1")
+    if input.keyPress(input.Keys.Num2) then processInput("2")
+    if input.keyPress(input.Keys.Num3) then processInput("3")
+    if input.keyPress(input.Keys.Num4) then processInput("4")
+    if input.keyPress(input.Keys.Num5) then processInput("5")
+    if input.keyPress(input.Keys.Num6) then processInput("6")
+    if input.keyPress(input.Keys.Num7) then processInput("7")
+    if input.keyPress(input.Keys.Num8) then processInput("8")
+    if input.keyPress(input.Keys.Num9) then processInput("9")
+    if input.keyPress(input.Keys.Num0) then processInput("0")
+    if input.keyPress(input.Keys.Space) then processInput(" ")
+    if input.keyPress(input.Keys.Minus) then processInput("-")
+    if input.keyPress(input.Keys.Equals) then processInput("=")
+    if input.keyPress(input.Keys.Leftbracket) then processInput("[")
+    if input.keyPress(input.Keys.Rightbracket) then processInput("]")
+    if input.keyPress(input.Keys.Semicolon) then processInput(";")
+    if input.keyPress(input.Keys.Apostrophe) then processInput("'")
+    if input.keyPress(input.Keys.Backslash) then processInput("\\")
+    if input.keyPress(input.Keys.Comma) then processInput(",")
+    if input.keyPress(input.Keys.Period) then processInput(".")
+    if input.keyPress(input.Keys.Slash) then processInput("/")
+    if input.keyPress(input.Keys.Grave) then processInput("`")
+    if input.keyPress(input.Keys.Tab) then processInput("tab")
 
-    if input.key(input.Keys.Left) then processInputDown("left") ; else processInputUp("left")
-    if input.key(input.Keys.Right) then processInputDown("right") ; else processInputUp("right")
-    if input.key(input.Keys.Home) then processInputDown("home") ; else processInputUp("home")
-    if input.key(input.Keys.End) then processInputDown("end") ; else processInputUp("end")
-    if input.key(input.Keys.Up) then processInputDown("up") ; else processInputUp("up")
-    if input.key(input.Keys.Down) then processInputDown("down") ; else processInputUp("down")
-    if input.key(input.Keys.Backspace) then processInputDown("backspace") ; else processInputUp("backspace")
-    if input.key(input.Keys.Delete) then processInputDown("delete") ; else processInputUp("delete")
+    if input.keyPress(input.Keys.Left) then processInput("left")
+    if input.keyPress(input.Keys.Right) then processInput("right")
+    if input.keyPress(input.Keys.Home) then processInput("home")
+    if input.keyPress(input.Keys.End) then processInput("end")
+    if input.keyPress(input.Keys.Up) then processInput("up")
+    if input.keyPress(input.Keys.Down) then processInput("down")
+    if input.keyPress(input.Keys.Backspace) then processInput("backspace")
+    if input.keyPress(input.Keys.Delete) then processInput("delete")
 
-    if input.key(input.Keys.Return) then processInputDown("return") ; else processInputUp("return")
+    if input.keyPress(input.Keys.Return) then processInput("return")
 end
 
 var cursor_x = 2, cursor_y = 3

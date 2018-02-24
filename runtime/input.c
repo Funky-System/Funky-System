@@ -11,6 +11,30 @@ static void getKeyState(CPU_State *state) {
     state->rr.type = VM_TYPE_INT;
 }
 
+Uint32 *keyStates;
+static void getKeyPress(CPU_State *state) {
+    const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
+
+    if (keyboard_state[STACK_VALUE(state, 0)->int_value] &&
+        (!keyStates[STACK_VALUE(state, 0)->int_value] || keyStates[STACK_VALUE(state, 0)->int_value] < SDL_GetTicks() - 100)) {
+        if (!keyStates[STACK_VALUE(state, 0)->int_value]) {
+            keyStates[STACK_VALUE(state, 0)->int_value] = SDL_GetTicks() + 400;
+        } else {
+            keyStates[STACK_VALUE(state, 0)->int_value] = SDL_GetTicks();
+        }
+        state->rr.int_value = 1;
+        state->rr.type = VM_TYPE_INT;
+        return;
+    } else {
+        state->rr.int_value = 0;
+        state->rr.type = VM_TYPE_INT;
+    }
+}
+
+void resetKeyPress(Uint8 key) {
+    keyStates[key] = 0;
+}
+
 static void getLeftButtonState(CPU_State *state) {
     state->rr.int_value = SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_LEFT) ? 1 : 0;
     state->rr.type = VM_TYPE_INT;
@@ -39,7 +63,10 @@ static void getMousePositionY(CPU_State *state) {
 }
 
 void register_bindings_input(CPU_State *state) {
+    keyStates = calloc(1, sizeof(Uint32) * 256);
+
     register_syscall(state, "getKeyState", getKeyState);
+    register_syscall(state, "getKeyPress", getKeyPress);
     register_syscall(state, "getLeftButtonState", getLeftButtonState);
     register_syscall(state, "getRightButtonState", getRightButtonState);
     register_syscall(state, "getMiddleButtonState", getMiddleButtonState);

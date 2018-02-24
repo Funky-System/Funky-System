@@ -4,6 +4,8 @@
 
 #include "input.h"
 
+extern void resetKeyPress(Uint8 key);
+
 fs_input_t input_init() {
     fs_input_t input;
 
@@ -47,6 +49,9 @@ void input_frame(fs_input_t *input) {
                     gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ];
                     break;
             }*/
+        }
+        else if (e.type == SDL_KEYUP) {
+            resetKeyPress(e.key.keysym.scancode);
         }
     }
 }
