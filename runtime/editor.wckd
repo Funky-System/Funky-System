@@ -119,7 +119,7 @@ export function update()
     sfxButton.draw(mode == Modes.Sfx)
     musicButton.draw(mode == Modes.Music)
 
-    if input.key(input.Keys.Escape) then
+    if input.keyPress(input.Keys.Escape) then
         return true
     end
 end
