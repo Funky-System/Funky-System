@@ -38,13 +38,15 @@ void pump_events(CPU_State *state) {
 
     Uint32 frameTicks = SDL_GetTicks() - prev_ticks;
 
-    // FPS cap
-    overhead += (1000.0/target_fps) - (float)frameTicks;
-    if (frameTicks < (1000.0 / target_fps))
-    {
-        //Wait remaining time
-        SDL_Delay((Uint32)((1000.0/target_fps) - (double)frameTicks));
-    }
+    #ifndef FUNKY_VM_OS_EMSCRIPTEN
+        // FPS cap
+        overhead += (1000.0/target_fps) - (float)frameTicks;
+        if (frameTicks < (1000.0 / target_fps))
+        {
+            //Wait remaining time
+            SDL_Delay((Uint32)((1000.0/target_fps) - (double)frameTicks));
+        }
+    #endif
 
     tmr += SDL_GetTicks() - prev_ticks;
     prev_ticks = SDL_GetTicks();

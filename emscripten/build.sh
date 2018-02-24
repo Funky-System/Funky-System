@@ -12,28 +12,17 @@ python ../../fonts/font_builder.py
 
 for file in ../../runtime/*.wckd
 do
-    wickedc "$file" -o $(basename -s .wckd "$file").funk
+    wickedc --arch 32 "$file" -o $(basename -s .wckd "$file").funk
 done
 
-emcc -O3 ../../*.c ../../runtime/*.c -s USE_SDL=2 -o funky.html \
+emcc --profiling ../../*.c ../../runtime/*.c -DVM_ARCH_BITS=32 -DVM_NATIVE_MALLOC=1 -s USE_SDL=2 -o funky.html \
     -I. \
     -I../../fonts \
     -I../../include \
     -IFunky-VM/include \
     Funky-VM/src/libvm/*.c \
     Funky-VM/src/libvm/instructions/*.c \
-    --embed-file kernel.funk \
-    --embed-file draw.funk \
-    --embed-file color.funk \
-    --embed-file input.funk \
-    --embed-file stdlib.funk \
-    --embed-file timer.funk \
-    --embed-file console.funk \
-    --embed-file math.funk \
-    --embed-file test_app.funk \
-    --embed-file editor.funk \
-    --embed-file editor_code.funk \
-    --embed-file editor_gfx.funk \
+    $(ls *.funk | awk '{printf " --embed-file %s",$0}') \
     \
     -s WASM=0 -s PRECISE_F32=1 \
     --shell-file ../shell.html
