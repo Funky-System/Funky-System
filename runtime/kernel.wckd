@@ -29,9 +29,7 @@ var fontHeight = 9
 
 var numRows = 192 / (fontHeight + 1)
 var rows = []
-rows[numRows - 1] = empty # create elements
-
-for i in 0..numRows - 1 do
+for i in 0..numRows do
     rows[i] = ""
 end
 
@@ -109,7 +107,7 @@ end
 var commandHistory = []
 var commandHistoryIndex = 0
 function processCommand(cmd)
-    commandHistory[] = cmd
+    if cmd != "" then commandHistory[] = cmd
     debug_print(cmd + "\n")
 
     newLine()
@@ -286,7 +284,7 @@ var lastKeyPress = -100000
 while running do
     checkInput()
 
-    processCommand("editor")
+    #processCommand("editor")
 
     draw.cls(colors.Black)
 
