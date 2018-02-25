@@ -315,6 +315,21 @@ static void setFont(CPU_State *state) {
     }
 }
 
+static void clip(CPU_State *state) {
+    SDL_Rect rect = {
+            /* x */ STACK_VALUE(state, -3)->int_value - display->camera.x,
+            /* y */ STACK_VALUE(state, -2)->int_value - display->camera.y,
+            /* w */ STACK_VALUE(state, -1)->int_value,
+            /* h */ STACK_VALUE(state, -0)->int_value
+    };
+
+    if (rect.w * rect.h == 0) {
+        SDL_RenderSetClipRect(display->renderer, NULL);
+    } else {
+        SDL_RenderSetClipRect(display->renderer, &rect);
+    }
+}
+
 void register_bindings_draw(CPU_State *state) {
     display = get_display();
     register_syscall(state, "camera", camera);
@@ -330,4 +345,5 @@ void register_bindings_draw(CPU_State *state) {
     register_syscall(state, "text", text);
     register_syscall(state, "textMono", textMono);
     register_syscall(state, "setFont", setFont);
+    register_syscall(state, "clip", clip);
 }

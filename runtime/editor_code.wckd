@@ -6,6 +6,8 @@ import math
 import keyboard
 import clipboard
 
+import editor_prompt
+
 var colors = color.Names
 
 var syntaxColors = {
@@ -85,8 +87,31 @@ function drawSelectionForLine(line_y)
     end
 end
 
+var prompt = empty
+
 export function update()
-    checkInput()
+    if prompt == empty then
+        checkInput()
+        checkMouseWheel()
+
+        var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+        if input.leftButtonPressed() then
+
+            if mouse_y > 16 && mouse_y < 183 then
+                cursor_y = math.max(0, math.min(lines.length() - 1, (mouse_y - 16 + scroll_y) / 9))
+                cursor_x = math.max(0, math.min(lines[cursor_y].length(), (mouse_x + scroll_x) / 6))
+                lastKeyPress = timer.getTicks()
+            end
+
+            if !leftButtonDown then
+                selection_start_y = cursor_y ; selection_start_x = cursor_x
+                leftButtonDown = true
+            end
+        else if leftButtonDown then
+            leftButtonDown = false
+            if selection_start_x == cursor_x && selection_start_y == cursor_y then selection_start_y = selection_start_x = -1 ;
+        end
+    end
 
     draw.fillRect(0, 16, 256, 180, color.Names.DarkGray)
 
@@ -107,9 +132,11 @@ export function update()
         drawLine(3 - scroll_x, 19 + 9 * (i - lines_from) - scroll_y % 9, lines[i])
     end
 
-    var time = timer.getTicks() / 500
-    if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
-        draw.fillRect(2 + cursor_x * 6 - scroll_x, 19 + 9 * (cursor_y - lines_from) - scroll_y % 9, 1, 7, colors.White)
+    if prompt == empty then
+        var time = timer.getTicks() / 500
+        if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
+            draw.fillRect(2 + cursor_x * 6 - scroll_x, 19 + 9 * (cursor_y - lines_from) - scroll_y % 9, 1, 7, colors.White)
+        end
     end
 
     # statusbar
@@ -123,26 +150,17 @@ export function update()
     draw.textMono(posTxtX, 185, posTxt, colors.LightGray)
     draw.fillRect(posTxtX - 4, 183, 1, 9, colors.DarkGray)
 
-    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
-    if input.leftButtonPressed() then
-
-        if mouse_y > 16 && mouse_y < 183 then
-            cursor_y = math.max(0, math.min(lines.length() - 1, (mouse_y - 16 + scroll_y) / 9))
-            cursor_x = math.max(0, math.min(lines[cursor_y].length(), (mouse_x + scroll_x) / 6))
-            lastKeyPress = timer.getTicks()
-        end
-
-        if !leftButtonDown then
-            selection_start_y = cursor_y ; selection_start_x = cursor_x
-            leftButtonDown = true
-        end
-    else if leftButtonDown then
-        leftButtonDown = false
-        if selection_start_x == cursor_x && selection_start_y == cursor_y then selection_start_y = selection_start_x = -1 ;
+    if prompt != empty then
+        prompt.drawAndUpdate()
     end
-
-    checkMouseWheel()
 end
+
+function filenamePromptCallback(filename)
+    debug_print(filename + "\n")
+    prompt = empty
+end
+
+prompt = new editor_prompt.Prompt("Filename:", filenamePromptCallback)
 
 function debug_print(str)
     asm "

@@ -1,0 +1,233 @@
+import draw
+import color
+import input
+import keyboard
+import timer
+import math
+
+export class Prompt
+    var lastKeyPress = 0
+    var cursor_x = 0
+    var scroll_x = 0
+
+    var confirmBtn, cancelBtn
+    var leftButtonDown = false
+
+    function new(msg, callback, input = "")
+        this.msg = msg
+        this.callback = callback
+        this.input = input
+        this.cursor_x = input.length()
+
+        this.confirmBtn = new Button(156, 90, 50, 14, "OK")
+        this.cancelBtn  = new Button(100, 90, 50, 14, "Cancel")
+    end
+
+    function drawAndUpdate()
+        draw.fillRect(40, 40, 176, 74, color.Names.LightGray)
+        draw.rect(40, 40, 176, 74, color.Names.BlueGray)
+        draw.rect(40, 40, 176, 1, color.Names.Gray)
+        draw.rect(40, 40, 1, 74, color.Names.Gray)
+
+        draw.setFont("9px")
+        draw.text(50, 50, this.msg, color.Names.Black)
+
+        draw.fillRect(50, 66, 156, 15, color.Names.White)
+        draw.rect(50, 66, 156, 15, color.Names.Gray)
+        draw.rect(50, 66, 156, 1, color.Names.DarkGray)
+        draw.rect(50, 66, 1, 15, color.Names.DarkGray)
+
+        this.checkInput()
+
+        draw.clip(51, 67, 154, 13)
+        draw.textMono(53 - this.scroll_x, 69, this.input, color.Names.Black)
+
+        var time = timer.getTicks() / 500
+        if time % 2 == 0 || this.lastKeyPress > timer.getTicks() - 1000 then
+            draw.fillRect(52 + this.cursor_x * 6 - this.scroll_x, 69, 1, 9, color.Names.Black)
+        end
+
+        draw.clip()
+    end
+
+    function checkInput()
+        var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+        if input.leftButtonPressed() && mouse_y >= 66 && mouse_y <= 81 then
+            this.cursor_x = math.max(0, math.min(this.input.length(), (mouse_x + this.scroll_x - 49) / 6))
+            this.lastKeyPress = timer.getTicks()
+        end
+
+        this.confirmBtn.draw()
+        this.cancelBtn.draw()
+        if input.leftButtonPressed() then
+            this.leftButtonDown = true
+            this.confirmBtn.hitTest(mouse_x, mouse_y)
+            this.cancelBtn.hitTest(mouse_x, mouse_y)
+        else if this.leftButtonDown then
+            this.leftButtonDown = false
+            if this.confirmBtn.hitTest(mouse_x, mouse_y) then
+                # OK clicked
+                this.callback(this.input)
+            else if this.cancelBtn.hitTest(mouse_x, mouse_y) then
+                # cancel clicked
+                this.callback(empty)
+            end
+        end
+
+        if input.keyPress(input.Keys.A) then this.processInput("a")
+        if input.keyPress(input.Keys.B) then this.processInput("b")
+        if input.keyPress(input.Keys.C) then this.processInput("c")
+        if input.keyPress(input.Keys.D) then this.processInput("d")
+        if input.keyPress(input.Keys.E) then this.processInput("e")
+        if input.keyPress(input.Keys.F) then this.processInput("f")
+        if input.keyPress(input.Keys.G) then this.processInput("g")
+        if input.keyPress(input.Keys.H) then this.processInput("h")
+        if input.keyPress(input.Keys.I) then this.processInput("i")
+        if input.keyPress(input.Keys.J) then this.processInput("j")
+        if input.keyPress(input.Keys.K) then this.processInput("k")
+        if input.keyPress(input.Keys.L) then this.processInput("l")
+        if input.keyPress(input.Keys.M) then this.processInput("m")
+        if input.keyPress(input.Keys.N) then this.processInput("n")
+        if input.keyPress(input.Keys.O) then this.processInput("o")
+        if input.keyPress(input.Keys.P) then this.processInput("p")
+        if input.keyPress(input.Keys.Q) then this.processInput("q")
+        if input.keyPress(input.Keys.R) then this.processInput("r")
+        if input.keyPress(input.Keys.S) then this.processInput("s")
+        if input.keyPress(input.Keys.T) then this.processInput("t")
+        if input.keyPress(input.Keys.U) then this.processInput("u")
+        if input.keyPress(input.Keys.V) then this.processInput("v")
+        if input.keyPress(input.Keys.W) then this.processInput("w")
+        if input.keyPress(input.Keys.X) then this.processInput("x")
+        if input.keyPress(input.Keys.Y) then this.processInput("y")
+        if input.keyPress(input.Keys.Z) then this.processInput("z")
+        if input.keyPress(input.Keys.Num1) then this.processInput("1")
+        if input.keyPress(input.Keys.Num2) then this.processInput("2")
+        if input.keyPress(input.Keys.Num3) then this.processInput("3")
+        if input.keyPress(input.Keys.Num4) then this.processInput("4")
+        if input.keyPress(input.Keys.Num5) then this.processInput("5")
+        if input.keyPress(input.Keys.Num6) then this.processInput("6")
+        if input.keyPress(input.Keys.Num7) then this.processInput("7")
+        if input.keyPress(input.Keys.Num8) then this.processInput("8")
+        if input.keyPress(input.Keys.Num9) then this.processInput("9")
+        if input.keyPress(input.Keys.Num0) then this.processInput("0")
+        if input.keyPress(input.Keys.Space) then this.processInput(" ")
+        if input.keyPress(input.Keys.Minus) then this.processInput("-")
+        if input.keyPress(input.Keys.Equals) then this.processInput("=")
+        if input.keyPress(input.Keys.Leftbracket) then this.processInput("[")
+        if input.keyPress(input.Keys.Rightbracket) then this.processInput("]")
+        if input.keyPress(input.Keys.Semicolon) then this.processInput(";")
+        if input.keyPress(input.Keys.Apostrophe) then this.processInput("'")
+        if input.keyPress(input.Keys.Backslash) then this.processInput("\\")
+        if input.keyPress(input.Keys.Comma) then this.processInput(",")
+        if input.keyPress(input.Keys.Period) then this.processInput(".")
+        if input.keyPress(input.Keys.Slash) then this.processInput("/")
+        if input.keyPress(input.Keys.Grave) then this.processInput("`")
+
+        if input.keyPress(input.Keys.Left) then this.processInput("left")
+        if input.keyPress(input.Keys.Right) then this.processInput("right")
+        if input.keyPress(input.Keys.Home) then this.processInput("home")
+        if input.keyPress(input.Keys.End) then this.processInput("end")
+        if input.keyPress(input.Keys.Backspace) then this.processInput("backspace")
+        if input.keyPress(input.Keys.Delete) then this.processInput("delete")
+
+        if input.keyPress(input.Keys.Return) then this.callback(this.input)
+        if input.keyPress(input.Keys.Escape) then this.callback(empty)
+
+        if input.keyPress(input.Keys.V) && input.key(input.Keys.Ctrl) then this.paste()
+
+        if input.key(input.Keys.F1) then this.scroll_x -= 1;
+        if input.key(input.Keys.F2) then this.scroll_x += 1;
+    end
+
+    function processInput(c)
+        this.lastKeyPress = timer.getTicks()
+
+        if c == "left" then
+            this.cursor_x -= 1
+            if this.cursor_x < 0 then this.cursor_x = 0;
+        else if c == "right" then
+            this.cursor_x += 1
+            if this.cursor_x > this.input.length() then this.cursor_x = this.input.length();
+        else if c == "backspace" then
+            this.input = this.input[0:this.cursor_x - 1] + this.input[this.cursor_x:-1]
+            this.cursor_x -= 1
+            if this.cursor_x < 0 then this.cursor_x = 0;
+        else if c == "home" then
+            this.cursor_x = 0
+        else if c == "end" then
+            this.cursor_x = this.length()
+        else if c == "delete" then
+            this.input = this.input[0:this.cursor_x] + this.input[this.cursor_x + 1:-1]
+        else if c == "return" then
+            this.confirm()
+        else if !input.key(input.Keys.Ctrl) then
+            var c_tmp = c
+            if input.key(input.Keys.Shift) then
+                c_tmp = keyboard.getShiftTable()[c]
+            end
+            if c_tmp != empty then
+                this.input = this.input[0:this.cursor_x] + c_tmp + this.input[this.cursor_x:-1]
+                this.cursor_x += c_tmp.length()
+            end
+        end
+        this.ensureCursorVisible()
+    end
+
+    function ensureCursorVisible()
+        var num_cols = 154 / 6
+        var cols_from = math.max(0, this.scroll_x / 6)
+        var cols_to = cols_from + num_cols
+
+        if this.cursor_x >= cols_to - 1 then
+            this.scroll_x = math.max(this.scroll_x, (this.cursor_x - num_cols + 1) * 6)
+        else if this.cursor_x <= cols_from + 1 then
+            this.scroll_x = math.max(0, math.min(this.scroll_x, (this.cursor_x - 1) * 6))
+        end
+    end
+
+end
+
+
+class Button
+    var caption = ""
+    var x, y, w, h
+    var bgUp, bgDown
+
+    function new(x, y, w, h, caption = "", bgUp = color.Names.LightGray, bgDown = color.Names.Gray)
+        this.caption = caption
+        this.x = x ; this.y = y ; this.w = w ; this.h = h
+        this.bgUp = bgUp ; this.bgDown = bgDown
+    end
+
+    function draw(down = false)
+        if down then
+            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.bgDown) # fill
+            draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.DarkGray) # top
+            draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # left
+            draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.Gray) # right
+            draw.fillRect(this.x + 1, this.y + this.h - 1, this.w - 2, 1, color.Names.Gray) # bottom
+            draw.setFont("9px")
+            draw.text(this.x + 3, this.y + 3, this.caption, color.Names.Black)
+        else
+            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.bgUp) # fill
+            draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.White) # top
+            draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.White) # left
+            draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # right
+            draw.fillRect(this.x + 1, this.y + this.h - 1, this.w - 2, 1, color.Names.DarkGray) # bottom
+            draw.setFont("9px")
+            draw.text(this.x + 3, this.y + 3, this.caption, color.Names.Black)
+        end
+    end
+
+    function hitTest(x, y)
+        if x >= this.x && x <= this.x + this.w then
+            if y >= this.y && y <= this.y + this.h then
+                this.draw(true)
+                return true
+            else
+                this.draw(false)
+                return false
+            end
+        end
+    end
+end
