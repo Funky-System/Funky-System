@@ -88,8 +88,6 @@ end
 export function update()
     checkInput()
 
-    checkMouseWheel()
-
     draw.fillRect(0, 16, 256, 180, color.Names.DarkGray)
 
     var num_lines = 158 / 9 + 2
@@ -129,8 +127,8 @@ export function update()
     if input.leftButtonPressed() then
 
         if mouse_y > 16 && mouse_y < 183 then
-            cursor_y = math.min(lines.length() - 1, (mouse_y - 16 + scroll_y) / 9)
-            cursor_x = math.min(lines[cursor_y].length(), (mouse_x + scroll_x) / 6)
+            cursor_y = math.max(0, math.min(lines.length() - 1, (mouse_y - 16 + scroll_y) / 9))
+            cursor_x = math.max(0, math.min(lines[cursor_y].length(), (mouse_x + scroll_x) / 6))
             lastKeyPress = timer.getTicks()
         end
 
@@ -142,6 +140,8 @@ export function update()
         leftButtonDown = false
         if selection_start_x == cursor_x && selection_start_y == cursor_y then selection_start_y = selection_start_x = -1 ;
     end
+
+    checkMouseWheel()
 end
 
 function debug_print(str)
@@ -519,6 +519,11 @@ function checkInput()
     if input.key(input.Keys.F2) then scroll_y = math.max(0, scroll_y - 1) ;
     if input.key(input.Keys.F3) then scroll_x += 1 ;
     if input.key(input.Keys.F4) then scroll_x = math.max(0, scroll_x - 1) ;
+
+
+    var num_lines = 158 / 9
+    if input.keyPress(input.Keys.Pagedown) then scroll_y += 158;
+    if input.keyPress(input.Keys.Pageup) then scroll_y = math.max(0, scroll_y - 158) ;
 end
 
 function getSelectedText()
@@ -569,12 +574,12 @@ function checkMouseWheel()
     var wheelX = input.mouseWheelX()
     var wheelY = input.mouseWheelY()
 
-    var mult = 3
-    scroll_x -= (wheelX - lastWheelX) * mult
+    var mult = 4
+    scroll_x += (wheelX - lastWheelX) * mult
     scroll_y -= (wheelY - lastWheelY) * mult
     scroll_x = math.max(scroll_x, 0)
     scroll_y = math.max(scroll_y, 0)
-    scroll_y = math.min(scroll_y, lines.length() * 9 - num_lines * 9)
+    if lines.length() > num_lines then scroll_y = math.min(scroll_y, lines.length() * 9 - num_lines * 9)
 
     lastWheelX = wheelX ; lastWheelY = wheelY
 end
