@@ -26,8 +26,8 @@ Uint32 fps_cap = 60;
 Uint32 prev_ticks = 0;
 Uint32 tmr = 0;
 Uint32 num_frames = 0;
-float overhead = 0;
-float target_fps = 60;
+//double overhead = 0;
+double target_fps = 60;
 
 extern int vm_emscripten_running;
 
@@ -36,11 +36,11 @@ void pump_events(CPU_State *state) {
     input_frame(&input);
     display_frame(&display);
 
-    Uint32 frameTicks = SDL_GetTicks() - prev_ticks;
 
     #ifndef FUNKY_VM_OS_EMSCRIPTEN
+        Uint32 frameTicks = SDL_GetTicks() - prev_ticks;
         // FPS cap
-        overhead += (1000.0/target_fps) - (float)frameTicks;
+        //overhead += (1000.0/target_fps) - (double)frameTicks;
         if (frameTicks < (1000.0 / target_fps))
         {
             //Wait remaining time
@@ -53,9 +53,10 @@ void pump_events(CPU_State *state) {
 
     // FPS calculation
     if (tmr >= 5000) {
-        printf("FPS: %.2f, load: %.2f%%\n", num_frames / (tmr / 1000.0), (((float)tmr - overhead) / (float)tmr) * 100.0);
+        //printf("FPS: %.2f, load: %.2f%%\n", num_frames / (tmr / 1000.0), (((double)tmr - overhead) / (double)tmr) * 100.0);
+        printf("FPS: %.2f\n", num_frames / (tmr / 1000.0));
         tmr = 0;
-        overhead = 0;
+        //overhead = 0;
         num_frames = 0;
     }
 

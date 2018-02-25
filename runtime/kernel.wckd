@@ -286,6 +286,8 @@ var lastKeyPress = -100000
 while running do
     checkInput()
 
+    processCommand("editor")
+
     draw.cls(colors.Black)
 
     if input.key(input.Keys.Z) then

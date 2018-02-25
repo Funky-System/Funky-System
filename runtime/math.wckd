@@ -13,3 +13,11 @@ export function min(a, b)
         return b
     end
 end
+
+export function abs(n)
+    if n < 0 then
+        return -n
+    else
+        return n
+    end
+end
