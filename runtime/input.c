@@ -85,6 +85,16 @@ static void getMousePositionY(CPU_State *state) {
     state->rr.type = VM_TYPE_INT;
 }
 
+static void getMouseWheelX(CPU_State *state) {
+    state->rr.int_value = mousewheel_x;
+    state->rr.type = VM_TYPE_INT;
+}
+
+static void getMouseWheelY(CPU_State *state) {
+    state->rr.int_value = mousewheel_y;
+    state->rr.type = VM_TYPE_INT;
+}
+
 void register_bindings_input(CPU_State *state) {
     keyStates = calloc(1, sizeof(Uint32) * 512);
 
@@ -95,4 +105,6 @@ void register_bindings_input(CPU_State *state) {
     register_syscall(state, "getMiddleButtonState", getMiddleButtonState);
     register_syscall(state, "getMousePositionX", getMousePositionX);
     register_syscall(state, "getMousePositionY", getMousePositionY);
+    register_syscall(state, "getMouseWheelX", getMouseWheelX);
+    register_syscall(state, "getMouseWheelY", getMouseWheelY);
 }

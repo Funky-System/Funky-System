@@ -15,4 +15,7 @@ fs_input_t input_init();
 void input_destroy(fs_input_t *display);
 void input_frame(fs_input_t *display);
 
+extern Uint32 mousewheel_y;
+extern Uint32 mousewheel_x;
+
 #endif //FUNKY_SYSTEM_INPUT_H

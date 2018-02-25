@@ -88,6 +88,8 @@ end
 export function update()
     checkInput()
 
+    checkMouseWheel()
+
     draw.fillRect(0, 16, 256, 180, color.Names.DarkGray)
 
     var num_lines = 158 / 9 + 2
@@ -558,4 +560,21 @@ end
 
 function paste()
     insert(clipboard.get())
+end
+
+var lastWheelX = 0, lastWheelY = 0
+function checkMouseWheel()
+    var num_lines = 158 / 9
+
+    var wheelX = input.mouseWheelX()
+    var wheelY = input.mouseWheelY()
+
+    var mult = 3
+    scroll_x -= (wheelX - lastWheelX) * mult
+    scroll_y -= (wheelY - lastWheelY) * mult
+    scroll_x = math.max(scroll_x, 0)
+    scroll_y = math.max(scroll_y, 0)
+    scroll_y = math.min(scroll_y, lines.length() * 9 - num_lines * 9)
+
+    lastWheelX = wheelX ; lastWheelY = wheelY
 end

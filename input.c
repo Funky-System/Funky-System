@@ -16,6 +16,9 @@ void input_destroy(fs_input_t *input) {
 
 }
 
+Uint32 mousewheel_y = 0;
+Uint32 mousewheel_x = 0;
+
 void input_frame(fs_input_t *input) {
     SDL_Event e;
     while (SDL_PollEvent(&e) != 0) {
@@ -23,32 +26,12 @@ void input_frame(fs_input_t *input) {
         if (e.type == SDL_QUIT) {
             //state->quit = 1;
         }
+        else if (e.type == SDL_MOUSEWHEEL) {
+            mousewheel_y += e.wheel.y;
+            mousewheel_x += e.wheel.x;
+        }
+        else if (e.type == SDL_KEYDOWN) {
 
-        else if(e.type == SDL_KEYDOWN)
-        {
-            //Select surfaces based on key press
-            /*switch(e.key.keysym.sym)
-            {
-                case SDLK_UP:
-                    gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_UP ];
-                    break;
-
-                case SDLK_DOWN:
-                    gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_DOWN ];
-                    break;
-
-                case SDLK_LEFT:
-                    gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_LEFT ];
-                    break;
-
-                case SDLK_RIGHT:
-                    gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_RIGHT ];
-                    break;
-
-                default:
-                    gCurrentSurface = gKeyPressSurfaces[ KEY_PRESS_SURFACE_DEFAULT ];
-                    break;
-            }*/
         }
         else if (e.type == SDL_KEYUP) {
             resetKeyPress(e.key.keysym.scancode);

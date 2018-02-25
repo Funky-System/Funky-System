@@ -5,6 +5,8 @@ export syscall<getRightButtonState> rightButtonPressed()
 export syscall<getMiddleButtonState> middleButtonPressed()
 export syscall<getMousePositionX> mouseX()
 export syscall<getMousePositionY> mouseY()
+export syscall<getMouseWheelX> mouseWheelX()
+export syscall<getMouseWheelY> mouseWheelY()
 
 export enum Keys
     Unknown = 0,
