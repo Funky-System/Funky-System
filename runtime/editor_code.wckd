@@ -4,6 +4,7 @@ import color
 import input
 import math
 import keyboard
+import clipboard
 
 var colors = color.Names
 
@@ -285,13 +286,15 @@ function insert(str)
             lines.insertAt(cursor_y + 1, insert_lines[line])
             cursor_y += 1;
         end
-        cursor_x = lines[lines.length() - 1].length()
+        cursor_x = insert_lines[insert_lines.length() - 1].length()
         lines[cursor_y] = lines[cursor_y] + rest
     end
 
     checkAutoIndent()
 
     selection_start_x = selection_start_y = -1
+
+    ensureCursorVisible()
 end
 
 function alignCursorLeftOfSelection()
@@ -334,7 +337,7 @@ function processInput(c)
     lastKeyPress = timer.getTicks()
     var endSelection = false
     if c == "left" || c == "right" || c == "up" || c == "down" || c == "home" || c == "end" then
-        if input.key(input.Keys.Lshift) || input.key(input.Keys.Rshift) then
+        if input.key(input.Keys.Shift) then
             if selection_start_x == -1 then
                 selection_start_x = cursor_x
                 selection_start_y = cursor_y
@@ -416,10 +419,6 @@ function processInput(c)
             if cursor_x > lines[cursor_y].length() then cursor_x = lines[cursor_y].length();
         end
     else if c == "return" then
-#        lines.insertAt(cursor_y + 1, lines[cursor_y][cursor_x:-1])
-#        lines[cursor_y] = lines[cursor_y][0:cursor_x]
-#        cursor_y += 1
-#        cursor_x = 0
         insert("\n")
         autoIndentReturn()
     else if c == "tab" then
@@ -427,12 +426,10 @@ function processInput(c)
         for i in 0..(tabSize-(cursor_x % tabSize)) do
             tabs += " "
         end
-#        lines[cursor_y] = lines[cursor_y][0:cursor_x] + tabs + lines[cursor_y][cursor_x:-1]
-#        cursor_x += tabs.length()
         insert(tabs)
-    else
+    else if !input.key(input.Keys.Ctrl) then
         var c_tmp = c
-        if input.key(input.Keys.Rshift) || input.key(input.Keys.Lshift) then
+        if input.key(input.Keys.Shift) then
             c_tmp = shiftTable[c]
         end
         if c_tmp != empty then
@@ -440,6 +437,8 @@ function processInput(c)
         end
     end
     ensureCursorVisible()
+
+    if input.key(input.Keys.Ctrl) then return
 
     if endSelection then
         selection_start_x = selection_start_y = -1 ;
@@ -508,10 +507,55 @@ function checkInput()
 
     if input.keyPress(input.Keys.Return) then processInput("return")
 
+    if input.keyPress(input.Keys.X) && input.key(input.Keys.Ctrl) then cut()
+    if input.keyPress(input.Keys.C) && input.key(input.Keys.Ctrl) then copy()
+    if input.keyPress(input.Keys.V) && input.key(input.Keys.Ctrl) then paste()
+
     if input.keyPress(input.Keys.F6) then insert("This\nIs\na\ntest")
 
     if input.key(input.Keys.F1) then scroll_y += 1 ;
     if input.key(input.Keys.F2) then scroll_y = math.max(0, scroll_y - 1) ;
     if input.key(input.Keys.F3) then scroll_x += 1 ;
     if input.key(input.Keys.F4) then scroll_x = math.max(0, scroll_x - 1) ;
+end
+
+function getSelectedText()
+    var to_x = cursor_x
+    var from_x = selection_start_x
+
+    var to_y = cursor_y
+    var from_y = selection_start_y
+
+    if selection_start_y > cursor_y || (selection_start_y == cursor_y && selection_start_x > cursor_x) then
+        to_x = selection_start_x; from_x = cursor_x
+        to_y = selection_start_y; from_y = cursor_y
+    end
+
+    if from_y == to_y then
+        return lines[from_y][from_x:to_x]
+    end
+
+    var str = ""
+
+    for y in from_y..to_y + 1 do
+        if from_y == y              then str += lines[y][from_x:-1]
+        if from_y < y && to_y != y  then str += lines[y]
+        if to_y == y                then str += lines[y][0:to_x]
+        if to_y != y then str += "\n"
+    end
+
+    return str
+end
+
+function cut()
+    copy()
+    insert("")
+end
+
+function copy()
+    clipboard.set(getSelectedText())
+end
+
+function paste()
+    insert(clipboard.get())
 end

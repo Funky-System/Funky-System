@@ -31,8 +31,15 @@ double target_fps = 60;
 
 extern int vm_emscripten_running;
 
+Uint32 current_frame_ticks = 0;
+Uint32 GetFrameTicks() {
+    return current_frame_ticks;
+}
+
 void pump_events(CPU_State *state) {
     num_frames++;
+    current_frame_ticks = SDL_GetTicks();
+
     input_frame(&input);
     display_frame(&display);
 
@@ -102,6 +109,7 @@ int main() {
     register_bindings_draw(&cpu_state);
     register_bindings_input(&cpu_state);
     register_bindings_timer(&cpu_state);
+    register_bindings_clipboard(&cpu_state);
 
     #ifdef FUNKY_VM_OS_EMSCRIPTEN
         emscripten_set_main_loop_arg(&run, &cpu_state, 0, 0);

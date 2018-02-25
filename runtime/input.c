@@ -5,9 +5,28 @@
 #include "../funky_system.h"
 #include "../font.h"
 
+enum CustomModifiers {
+    CTRL = 400,
+    SHIFT = 401,
+    ALT = 402,
+    GUI = 403
+};
+
 static void getKeyState(CPU_State *state) {
     const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
-    state->rr.int_value = keyboard_state[STACK_VALUE(state, 0)->int_value];
+    vm_type_signed_t val;
+    if (STACK_VALUE(state, 0)->int_value == CTRL) {
+        val = keyboard_state[SDL_SCANCODE_LCTRL] || keyboard_state[SDL_SCANCODE_RCTRL];
+    } else if (STACK_VALUE(state, 0)->int_value == SHIFT) {
+        val = keyboard_state[SDL_SCANCODE_LSHIFT] || keyboard_state[SDL_SCANCODE_RSHIFT];
+    } else if (STACK_VALUE(state, 0)->int_value == ALT) {
+        val = keyboard_state[SDL_SCANCODE_LALT] || keyboard_state[SDL_SCANCODE_RALT];
+    } else if (STACK_VALUE(state, 0)->int_value == GUI) {
+        val = keyboard_state[SDL_SCANCODE_LGUI] || keyboard_state[SDL_SCANCODE_RGUI];
+    } else {
+        val = keyboard_state[STACK_VALUE(state, 0)->int_value];
+    }
+    state->rr.int_value = val;
     state->rr.type = VM_TYPE_INT;
 }
 
@@ -16,11 +35,15 @@ static void getKeyPress(CPU_State *state) {
     const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
 
     if (keyboard_state[STACK_VALUE(state, 0)->int_value] &&
-        (!keyStates[STACK_VALUE(state, 0)->int_value] || keyStates[STACK_VALUE(state, 0)->int_value] < SDL_GetTicks() - 100)) {
-        if (!keyStates[STACK_VALUE(state, 0)->int_value]) {
-            keyStates[STACK_VALUE(state, 0)->int_value] = SDL_GetTicks() + 400;
-        } else {
-            keyStates[STACK_VALUE(state, 0)->int_value] = SDL_GetTicks();
+        (!keyStates[STACK_VALUE(state, 0)->int_value]                              /* it isn't pressed */
+         || keyStates[STACK_VALUE(state, 0)->int_value] < GetFrameTicks() - 100    /* it hasnt been reported pressed for 100 ms */
+         || keyStates[STACK_VALUE(state, 0)->int_value] == GetFrameTicks() + 400   /* it has been reported this frame */
+         || keyStates[STACK_VALUE(state, 0)->int_value] == GetFrameTicks()         /* it has been reported this frame */
+        ) ) {
+        if (keyStates[STACK_VALUE(state, 0)->int_value] == 0) {
+            keyStates[STACK_VALUE(state, 0)->int_value] = GetFrameTicks() + 400;
+        } else if (keyStates[STACK_VALUE(state, 0)->int_value] < GetFrameTicks()) {
+            keyStates[STACK_VALUE(state, 0)->int_value] = GetFrameTicks();
         }
         state->rr.int_value = 1;
         state->rr.type = VM_TYPE_INT;
@@ -63,7 +86,7 @@ static void getMousePositionY(CPU_State *state) {
 }
 
 void register_bindings_input(CPU_State *state) {
-    keyStates = calloc(1, sizeof(Uint32) * 256);
+    keyStates = calloc(1, sizeof(Uint32) * 512);
 
     register_syscall(state, "getKeyState", getKeyState);
     register_syscall(state, "getKeyPress", getKeyPress);

@@ -12,8 +12,10 @@
 void register_bindings_draw(CPU_State *state);
 void register_bindings_input(CPU_State *state);
 void register_bindings_timer(CPU_State *state);
+void register_bindings_clipboard(CPU_State *state);
 
 fs_display_t *get_display();
 fs_input_t *get_input();
+Uint32 GetFrameTicks();
 
 #endif //FUNKY_SYSTEM_FUNKY_SYSTEM_H

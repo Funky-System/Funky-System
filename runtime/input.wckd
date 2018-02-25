@@ -248,5 +248,10 @@ export enum Keys
     App2 = 284,
     
     Audiorewind = 285,
-    Audiofastforward = 286
+    Audiofastforward = 286,
+
+    Ctrl = 400,
+    Shift = 401,
+    Alt = 402,
+    Gui = 403
 end

@@ -203,7 +203,7 @@ function processInput(c)
         autocomplete()
     else
         var c_tmp = c
-        if input.key(input.Keys.Rshift) || input.key(input.Keys.Lshift) then
+        if input.key(input.Keys.Shift) then
             c_tmp = shiftTable[c]
         end
         #debug_print(c[0] + "\n")
