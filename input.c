@@ -27,8 +27,8 @@ void input_frame(fs_input_t *input) {
             //state->quit = 1;
         }
         else if (e.type == SDL_MOUSEWHEEL) {
-            mousewheel_y += e.wheel.y * e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1;
-            mousewheel_x += e.wheel.x * e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1;
+            mousewheel_y += e.wheel.y * (e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1);
+            mousewheel_x += e.wheel.x * (e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1);
         }
         else if (e.type == SDL_KEYDOWN) {
 
