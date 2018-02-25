@@ -294,6 +294,42 @@ function insert(str)
     selection_start_x = selection_start_y = -1
 end
 
+function alignCursorLeftOfSelection()
+    var to_x = cursor_x
+    var from_x = selection_start_x
+
+    var to_y = cursor_y
+    var from_y = selection_start_y
+
+    if selection_start_y > cursor_y || (selection_start_y == cursor_y && selection_start_x > cursor_x) then
+        to_x = selection_start_x; from_x = cursor_x
+        to_y = selection_start_y; from_y = cursor_y
+    end
+
+    cursor_x = from_x
+    cursor_y = from_y
+    selection_start_x = to_x
+    selection_start_y = to_y
+end
+
+function alignCursorRightOfSelection()
+    var to_x = cursor_x
+    var from_x = selection_start_x
+
+    var to_y = cursor_y
+    var from_y = selection_start_y
+
+    if selection_start_y > cursor_y || (selection_start_y == cursor_y && selection_start_x > cursor_x) then
+        to_x = selection_start_x; from_x = cursor_x
+        to_y = selection_start_y; from_y = cursor_y
+    end
+
+    cursor_x = to_x
+    cursor_y = to_y
+    selection_start_x = from_x
+    selection_start_y = from_y
+end
+
 function processInput(c)
     lastKeyPress = timer.getTicks()
     var endSelection = false
@@ -311,22 +347,30 @@ function processInput(c)
     end
 
     if c == "left" then
-        cursor_x -= 1
-        if cursor_x < 0 then
-            if cursor_y > 0 then
-                cursor_y -= 1
-                cursor_x = lines[cursor_y].length()
+        if !endSelection || selection_start_x == -1 then
+            cursor_x -= 1
+            if cursor_x < 0 then
+                if cursor_y > 0 then
+                    cursor_y -= 1
+                    cursor_x = lines[cursor_y].length()
+                end
             end
+            if cursor_x < 0 then cursor_x = 0;
+        else
+            alignCursorLeftOfSelection()
         end
-        if cursor_x < 0 then cursor_x = 0;
     else if c == "right" then
-        cursor_x += 1
-        if cursor_x > lines[cursor_y].length() then
-            if cursor_y < lines.length() - 1 then
-                cursor_x = 0
-                cursor_y += 1
+        if !endSelection || selection_start_x == -1 then
+            cursor_x += 1
+            if cursor_x > lines[cursor_y].length() then
+                if cursor_y < lines.length() - 1 then
+                    cursor_x = 0
+                    cursor_y += 1
+                end
+                if cursor_x > lines[cursor_y].length() then cursor_x = lines[cursor_y].length();
             end
-            if cursor_x > lines[cursor_y].length() then cursor_x = lines[cursor_y].length();
+        else
+            alignCursorRightOfSelection()
         end
     else if c == "backspace" then
         if selection_start_y > -1 then
