@@ -25,7 +25,7 @@ export class Prompt
         this.cancelBtn  = new Button(100, 90, 50, 14, "Cancel")
     end
 
-    function drawAndUpdate()
+    function draw()
         draw.fillRect(40, 40, 176, 74, color.Names.LightGray)
         draw.rect(40, 40, 176, 74, color.Names.BlueGray)
         draw.rect(40, 40, 176, 1, color.Names.Gray)
@@ -34,15 +34,15 @@ export class Prompt
         draw.setFont("9px")
         draw.text(50, 50, this.msg, color.Names.Black)
 
+        # textbox
         draw.fillRect(50, 66, 156, 15, color.Names.White)
         draw.rect(50, 66, 156, 15, color.Names.Gray)
-        draw.rect(50, 66, 156, 1, color.Names.DarkGray)
-        draw.rect(50, 66, 1, 15, color.Names.DarkGray)
+        #draw.rect(50, 66, 156, 1, color.Names.DarkGray)
+        #draw.rect(50, 66, 1, 15, color.Names.DarkGray)
 
         this.confirmBtn.draw()
         this.cancelBtn.draw()
 
-        this.checkInput()
 
         draw.clip(51, 67, 154, 13)
         draw.textMono(53 - this.scroll_x, 69, this.input, color.Names.Black)
@@ -54,6 +54,10 @@ export class Prompt
 
         draw.clip()
 
+    end
+
+    function update()
+        this.checkInput()
     end
 
     function checkInput()
@@ -202,7 +206,7 @@ class Button
     var x, y, w, h
     var bgUp, bgDown
 
-    function new(x, y, w, h, caption = "", bgUp = color.Names.LightGray, bgDown = color.Names.Gray)
+    function new(x, y, w, h, caption = "", bgUp = color.Names.Gray, bgDown = color.Names.DarkGray)
         this.caption = caption
         this.x = x ; this.y = y ; this.w = w ; this.h = h
         this.bgUp = bgUp ; this.bgDown = bgDown
@@ -210,21 +214,16 @@ class Button
 
     function draw(down = false)
         if down then
-            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.bgDown) # fill
-            draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.DarkGray) # top
-            draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # left
-            draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.Gray) # right
-            draw.fillRect(this.x + 1, this.y + this.h - 1, this.w - 2, 1, color.Names.Gray) # bottom
+            draw.fillRect(this.x, this.y, this.w, this.h, this.bgDown) # fill
+            draw.fillRect(this.x, this.y + this.h, this.w, 1, color.Names.Gray) # bottom
             draw.setFont("9px")
-            draw.text(this.x + 3, this.y + 3, this.caption, color.Names.Black)
+            draw.text(this.x + this.w / 2 - draw.textWidth(this.caption) / 2 - 1, this.y + 4, this.caption, color.Names.White)
         else
-            draw.fillRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, this.bgUp) # fill
-            draw.fillRect(this.x + 1, this.y, this.w - 2, 1, color.Names.White) # top
-            draw.fillRect(this.x, this.y + 1, 1, this.h - 2, color.Names.White) # left
-            draw.fillRect(this.x + this.w - 1, this.y + 1, 1, this.h - 2, color.Names.DarkGray) # right
-            draw.fillRect(this.x + 1, this.y + this.h - 1, this.w - 2, 1, color.Names.DarkGray) # bottom
+            draw.fillRect(this.x, this.y, this.w, this.h, this.bgUp) # fill
+            draw.fillRect(this.x, this.y + this.h, this.w, 1, color.Names.DarkGray) # bottom
+
             draw.setFont("9px")
-            draw.text(this.x + 3, this.y + 3, this.caption, color.Names.Black)
+            draw.text(this.x + this.w / 2 - draw.textWidth(this.caption) / 2 - 1, this.y + 4, this.caption, color.Names.White)
         end
     end
 

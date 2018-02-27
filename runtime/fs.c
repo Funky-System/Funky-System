@@ -3,9 +3,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include <funkyvm/cpu.h>
 #include <funkyvm/funkyvm.h>
+#include <ftw.h>
 #include "../funky_system.h"
 
 static void fs_rename(CPU_State *state) {
@@ -17,7 +19,19 @@ static void fs_rename(CPU_State *state) {
 static void fs_exists(CPU_State *state) {
     const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -0));
     struct stat b;
-    VM_RETURN_INT(state, stat(path, &b));
+    VM_RETURN_INT(state, stat(path, &b) == 0);
+}
+
+static void fs_fileExists(CPU_State *state) {
+    const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -0));
+    struct stat b;
+    VM_RETURN_INT(state, stat(path, &b) == 0 && !S_ISDIR(b.st_mode));
+}
+
+static void fs_dirExists(CPU_State *state) {
+    const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -0));
+    struct stat b;
+    VM_RETURN_INT(state, stat(path, &b) == 0 && S_ISDIR(b.st_mode));
 }
 
 static void fs_mkdir(CPU_State *state) {
@@ -32,9 +46,30 @@ static void fs_mkdir(CPU_State *state) {
     VM_RETURN_INT(state, error);
 }
 
+static int rmFiles(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
+{
+    if(remove(pathname) < 0)
+    {
+        perror("ERROR: remove");
+        return -1;
+    }
+
+    return 0;
+}
+
+static int rmrfdir(const char* path) {
+    return nftw(path, rmFiles, 10, FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
+}
+
+
 static void fs_rmdir(CPU_State *state) {
-    const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -0));
-    VM_RETURN_INT(state, rmdir(path));
+    const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -1));
+    const int force = STACK_VALUE(state, 0)->int_value;
+    if (force) {
+        VM_RETURN_INT(state, rmrfdir(path));
+    } else {
+        VM_RETURN_INT(state, rmdir(path));
+    }
 }
 
 static void fs_writeString(CPU_State *state) {
@@ -47,7 +82,7 @@ static void fs_writeString(CPU_State *state) {
 }
 
 static void fs_readString(CPU_State *state) {
-    const char *filename = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -1));
+    const char *filename = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
 
     FILE * pFile;
     size_t lSize;
@@ -66,10 +101,10 @@ static void fs_readString(CPU_State *state) {
     rewind(pFile);
 
     // allocate memory to contain the whole file:
-    buffer = (char*) malloc(sizeof(char)*lSize);
+    buffer = (char*) malloc(sizeof(char)*lSize + 1);
     if (buffer == NULL) {
-        fputs ("Memory error", stderr);
-        exit (2);
+        fputs("Memory error", stderr);
+        exit(2);
     }
 
     // copy the file into the buffer:
@@ -78,6 +113,7 @@ static void fs_readString(CPU_State *state) {
         fputs("Reading error", stderr);
         exit(3);
     }
+    buffer[lSize] = '\0';
 
     /* the whole file is now loaded in the memory buffer. */
     state->rr = vm_create_string(state, buffer);
@@ -87,9 +123,45 @@ static void fs_readString(CPU_State *state) {
     free (buffer);
 }
 
+static void fs_delete(CPU_State *state) {
+    const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
+    VM_RETURN_INT(state, unlink(path));
+}
+
+static void fs_dir(CPU_State *state) {
+    const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
+
+    vm_value_t array = vm_create_array(state);
+
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir(path)) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            //printf ("%s\n", ent->d_name);
+            if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) continue;
+            vm_array_append(state, array, vm_create_string(state, ent->d_name));
+        }
+        closedir(dir);
+    } else {
+        /* could not open directory */
+        //perror("");
+        //exit(EXIT_FAILURE);
+        VM_RETURN_EMPTY(state);
+    }
+
+    VM_RETURN(state, array);
+}
+
 void register_bindings_fs(CPU_State *state) {
     register_syscall(state, "rename", fs_rename);
     register_syscall(state, "exists", fs_exists);
+    register_syscall(state, "fileExists", fs_fileExists);
+    register_syscall(state, "dirExists", fs_dirExists);
     register_syscall(state, "mkdir", fs_mkdir);
     register_syscall(state, "rmdir", fs_rmdir);
+    register_syscall(state, "readString", fs_readString);
+    register_syscall(state, "writeString", fs_writeString);
+    register_syscall(state, "delete", fs_delete);
+    register_syscall(state, "dir", fs_dir);
 }

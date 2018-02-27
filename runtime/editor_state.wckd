@@ -1,0 +1,15 @@
+export function getPath()
+    if projectName == "(unnamed)" then return empty
+    return "funky-projects/" + projectName
+end
+
+var projectName = "(unnamed)"
+
+export function getProjectName()
+    return projectName
+end
+
+export function setProjectName(p)
+    projectName = p
+end
+

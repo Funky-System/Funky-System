@@ -110,6 +110,7 @@ int main() {
     register_bindings_input(&cpu_state);
     register_bindings_timer(&cpu_state);
     register_bindings_clipboard(&cpu_state);
+    register_bindings_fs(&cpu_state);
 
     #ifdef FUNKY_VM_OS_EMSCRIPTEN
         emscripten_set_main_loop_arg(&run, &cpu_state, 0, 0);

@@ -50,6 +50,19 @@ function arrayContains(val)
     return false
 end
 
+(prototypeof array).join = arrayJoin
+function arrayJoin(glue)
+    var str = ""
+    for i in 0..this.length() do
+        str += this.value[i]
+        if i < this.length() - 1 then
+            str += "\n"
+        end
+    end
+    return str
+end
+
+
 #############
 ## STRINGS ##
 #############

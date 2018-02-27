@@ -37,11 +37,9 @@ export class FileList
         end
     end
 
-    function drawAndUpdate()
+    function draw()
         draw.fillRect(0, 16, 150, 167, color.Names.BlueGray)
         draw.rect(-1, 16, 151, 167, color.Names.DarkGray)
-
-        this.checkInput()
 
         draw.setFont("7px")
         draw.fillRect(0, 29, 149, 1, color.Names.DarkGray)
@@ -62,7 +60,16 @@ export class FileList
         draw.clip()
 
         if fileprompt != empty then
-            fileprompt.drawAndUpdate()
+            fileprompt.draw()
+            return
+        end
+    end
+
+    function update()
+        this.checkInput()
+
+        if fileprompt != empty then
+            fileprompt.update()
             return
         end
     end

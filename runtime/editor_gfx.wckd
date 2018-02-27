@@ -1,5 +1,9 @@
 import draw
 
-export function update()
+export function editor_draw()
     draw.fillCircle(100, 100, 20, 3)
+end
+
+export function editor_update()
+
 end

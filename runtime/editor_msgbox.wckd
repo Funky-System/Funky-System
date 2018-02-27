@@ -1,0 +1,107 @@
+import draw
+import color
+import input
+import keyboard
+import timer
+import math
+
+export class Msgbox
+    var confirmBtn = empty, cancelBtn = empty
+    var leftButtonDown = false
+
+    var ignoreInputFrames = 10
+
+    function new(msg, callback, okText = "OK", cancelText = empty)
+        this.msg = msg
+        this.callback = callback
+        this.okText = okText
+        this.cancelText = cancelText
+
+        if okText != empty then this.confirmBtn = new Button(146, 90, 60, 14, okText)
+        if cancelText != empty then this.cancelBtn = new Button(80, 90, 60, 14, cancelText)
+    end
+
+    function draw()
+        draw.fillRect(40, 40, 176, 74, color.Names.LightGray)
+        draw.rect(40, 40, 176, 74, color.Names.BlueGray)
+        draw.rect(40, 40, 176, 1, color.Names.Gray)
+        draw.rect(40, 40, 1, 74, color.Names.Gray)
+
+        draw.setFont("9px")
+        draw.text(50, 50, this.msg, color.Names.Black)
+
+        if this.confirmBtn != empty then this.confirmBtn.draw()
+        if this.cancelBtn != empty then this.cancelBtn.draw()
+    end
+
+    function update()
+        this.checkInput()
+    end
+
+    function checkInput()
+        if this.ignoreInputFrames > 0 then
+            this.ignoreInputFrames -= 1
+            return
+        end
+
+        var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+        if input.leftButtonPressed() then
+            this.leftButtonDown = true
+            if this.confirmBtn != empty then this.confirmBtn.hitTest(mouse_x, mouse_y);
+            if this.cancelBtn != empty then this.cancelBtn.hitTest(mouse_x, mouse_y);
+        else if this.leftButtonDown then
+            this.leftButtonDown = false
+            if this.confirmBtn != empty && this.confirmBtn.hitTest(mouse_x, mouse_y) then
+                # OK clicked
+                this.callback(true)
+            else if this.cancelBtn != empty && this.cancelBtn.hitTest(mouse_x, mouse_y) then
+                # cancel clicked
+                this.callback(false)
+            end
+        end
+
+        if input.keyPress(input.Keys.Return) then this.callback(true) ;
+        if input.keyPress(input.Keys.Escape) then this.callback(false) ;
+    end
+
+end
+
+
+class Button
+    var caption = ""
+    var x, y, w, h
+    var bgUp, bgDown
+
+    function new(x, y, w, h, caption = "", bgUp = color.Names.Gray, bgDown = color.Names.DarkGray)
+        this.caption = caption
+        this.x = x ; this.y = y ; this.w = w ; this.h = h
+        this.bgUp = bgUp ; this.bgDown = bgDown
+    end
+
+    function draw(down = false)
+        if down then
+            draw.fillRect(this.x, this.y, this.w, this.h, this.bgDown) # fill
+            draw.fillRect(this.x, this.y + this.h, this.w, 1, color.Names.Gray) # bottom
+            draw.setFont("9px")
+            draw.text(this.x + this.w / 2 - draw.textWidth(this.caption) / 2 - 1, this.y + 4, this.caption, color.Names.White)
+        else
+            draw.fillRect(this.x, this.y, this.w, this.h, this.bgUp) # fill
+            draw.fillRect(this.x, this.y + this.h, this.w, 1, color.Names.DarkGray) # bottom
+
+            draw.setFont("9px")
+            draw.text(this.x + this.w / 2 - draw.textWidth(this.caption) / 2 - 1, this.y + 4, this.caption, color.Names.White)
+        end
+    end
+
+    function hitTest(x, y)
+        if x >= this.x && x <= this.x + this.w then
+            if y >= this.y && y <= this.y + this.h then
+                this.draw(true)
+                return true
+            else
+                this.draw(false)
+                return false
+            end
+        end
+    end
+end
