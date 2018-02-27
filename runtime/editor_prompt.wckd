@@ -13,6 +13,8 @@ export class Prompt
     var confirmBtn, cancelBtn
     var leftButtonDown = false
 
+    var ignoreInputFrames = 10
+
     function new(msg, callback, input = "")
         this.msg = msg
         this.callback = callback
@@ -37,6 +39,9 @@ export class Prompt
         draw.rect(50, 66, 156, 1, color.Names.DarkGray)
         draw.rect(50, 66, 1, 15, color.Names.DarkGray)
 
+        this.confirmBtn.draw()
+        this.cancelBtn.draw()
+
         this.checkInput()
 
         draw.clip(51, 67, 154, 13)
@@ -48,17 +53,21 @@ export class Prompt
         end
 
         draw.clip()
+
     end
 
     function checkInput()
+        if this.ignoreInputFrames > 0 then
+            this.ignoreInputFrames -= 1
+            return
+        end
+
         var mouse_x = input.mouseX(), mouse_y = input.mouseY()
         if input.leftButtonPressed() && mouse_y >= 66 && mouse_y <= 81 then
             this.cursor_x = math.max(0, math.min(this.input.length(), (mouse_x + this.scroll_x - 49) / 6))
             this.lastKeyPress = timer.getTicks()
         end
 
-        this.confirmBtn.draw()
-        this.cancelBtn.draw()
         if input.leftButtonPressed() then
             this.leftButtonDown = true
             this.confirmBtn.hitTest(mouse_x, mouse_y)

@@ -1,0 +1,158 @@
+import draw
+import color
+import input
+import keyboard
+import timer
+import math
+
+import editor_prompt
+
+function debug_print(str)
+    asm "
+        ld.arg 0
+        conv.str
+        syscall.byname \"debug_print\"
+        pop
+    "
+end
+
+export class FileList
+    var lastKeyPress = 0
+    var cursor_x = 0
+    var scroll_x = 0
+
+    var leftButtonDown = false
+    var index = 0
+
+    function new(files, callback, current_file = "")
+        this.callback = callback
+        this.files = files
+        this.from = 0
+
+        for i in 0..files.length() do
+            if files[i] == current_file then
+                this.index = i
+                break
+            end
+        end
+    end
+
+    function drawAndUpdate()
+        draw.fillRect(0, 16, 150, 167, color.Names.BlueGray)
+        draw.rect(-1, 16, 151, 167, color.Names.DarkGray)
+
+        this.checkInput()
+
+        draw.setFont("7px")
+        draw.fillRect(0, 29, 149, 1, color.Names.DarkGray)
+
+        if this.index == -1 then
+            draw.fillRect(1, 19, 147, 9, color.Names.Gray)
+        else if this.index < this.from || this.index > this.from + 15 - 1 then
+            # do not draw
+        else
+            draw.fillRect(1, 32 + (this.index - this.from) * 10, 147, 9, color.Names.Gray)
+        end
+        draw.text(3, 20, "New file...", color.Names.White)
+        draw.clip(0, 16, 150, 166)
+        for i in math.max(0, this.from)..math.min(this.files.length(), this.from + 15) do
+            draw.text(3, 33 + (i - this.from) * 10, this.files[i], color.Names.White)
+        end
+
+        draw.clip()
+
+        if fileprompt != empty then
+            fileprompt.drawAndUpdate()
+            return
+        end
+    end
+
+    function checkInput()
+        if fileprompt != empty then
+            return
+        end
+
+        var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+        if input.leftButtonPressed() && mouse_y >= 16 && mouse_x < 150 && mouse_y < 183 then
+            if mouse_y < 30 then
+                this.index = -1
+            else
+                this.index = this.from + ((mouse_y - 32) / 10)
+            end
+        end
+
+        if input.leftButtonPressed() then
+            this.leftButtonDown = true
+        else if this.leftButtonDown then
+            this.leftButtonDown = false
+
+            if  mouse_y < 183 && mouse_x < 150 then
+                if this.index == -1 then
+                    # new file
+                    newFile(this.callback)
+                    this.index = -2
+                else
+                    this.callback(this.files[this.index])
+                end
+            else
+                # clicked outside
+                this.callback(empty)
+            end
+        end
+
+        if input.keyPress(input.Keys.Delete) then this.processInput("delete")
+        if input.keyPress(input.Keys.Up) then
+            this.index -= 1
+            this.ensureVisible()
+        end
+
+        if input.keyPress(input.Keys.Down) then
+            this.index += 1
+            this.ensureVisible()
+        end
+
+        this.index = math.max(-1, this.index)
+        this.index = math.min(this.files.length() - 1, this.index)
+
+        this.checkMouseWheel()
+
+        if input.keyPress(input.Keys.Return) then
+            if this.index == -1 then
+                newFile(this.callback)
+                this.index = -2
+            else
+                this.callback(this.files[this.index])
+            end
+        end
+        if input.keyPress(input.Keys.Escape) then this.callback(empty)
+    end
+
+    function ensureVisible()
+        if this.index < this.from then this.from = math.max(0, this.index)
+        if this.index >= (this.from + 15) then this.from = this.index - (15 - 1)
+    end
+
+    var lastWheelX = 0, lastWheelY = 0
+    function checkMouseWheel()
+        var wheelY = input.mouseWheelY()
+
+        var mult = 1
+        this.from -= (wheelY - this.lastWheelY) * mult
+        this.lastWheelY = wheelY
+
+        this.from = math.max(math.min(this.files.length() - 15, this.from), 0)
+    end
+
+end
+
+var fileprompt_origcallback
+function fileprompt_callback(filename)
+    fileprompt = empty
+    fileprompt_origcallback(filename)
+end
+
+var fileprompt = empty
+function newFile(callback)
+    fileprompt_origcallback = callback
+    fileprompt = new editor_prompt.Prompt("Filename:", fileprompt_callback)
+end

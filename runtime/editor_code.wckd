@@ -7,6 +7,7 @@ import keyboard
 import clipboard
 
 import editor_prompt
+import editor_file_list
 
 var colors = color.Names
 
@@ -31,7 +32,8 @@ var leftButtonDown = false
 var keywords = [
     "function", "var", "end", "if", "for", "then", "do", "export",
     "import", "else", "while", "return", "empty", "true", "false",
-    "this", "class", "syscall", "extends", "new", "string"
+    "this", "class", "syscall", "extends", "new", "string", "break",
+    "continue"
     ]
 function drawLine(x, y, line)
     # find comment
@@ -88,9 +90,10 @@ function drawSelectionForLine(line_y)
 end
 
 var prompt = empty
+var filelist = empty
 
 export function update()
-    if prompt == empty then
+    if prompt == empty && filelist == empty then
         checkInput()
         checkMouseWheel()
 
@@ -110,6 +113,10 @@ export function update()
         else if leftButtonDown then
             leftButtonDown = false
             if selection_start_x == cursor_x && selection_start_y == cursor_y then selection_start_y = selection_start_x = -1 ;
+
+            if mouse_x <= 80 && mouse_y >= 183 then
+                openFileList()
+            end
         end
     end
 
@@ -132,7 +139,7 @@ export function update()
         drawLine(3 - scroll_x, 19 + 9 * (i - lines_from) - scroll_y % 9, lines[i])
     end
 
-    if prompt == empty then
+    if prompt == empty && filelist == empty then
         var time = timer.getTicks() / 500
         if time % 2 == 0 || lastKeyPress > timer.getTicks() - 1000 then
             draw.fillRect(2 + cursor_x * 6 - scroll_x, 19 + 9 * (cursor_y - lines_from) - scroll_y % 9, 1, 7, colors.White)
@@ -153,6 +160,10 @@ export function update()
     if prompt != empty then
         prompt.drawAndUpdate()
     end
+
+    if filelist != empty then
+        filelist.drawAndUpdate()
+    end
 end
 
 function filenamePromptCallback(filename)
@@ -160,7 +171,7 @@ function filenamePromptCallback(filename)
     prompt = empty
 end
 
-prompt = new editor_prompt.Prompt("Filename:", filenamePromptCallback)
+#prompt = new editor_prompt.Prompt("Filename:", filenamePromptCallback)
 
 function debug_print(str)
     asm "
@@ -531,6 +542,8 @@ function checkInput()
     if input.keyPress(input.Keys.C) && input.key(input.Keys.Ctrl) then copy()
     if input.keyPress(input.Keys.V) && input.key(input.Keys.Ctrl) then paste()
 
+    if input.keyPress(input.Keys.O) && input.key(input.Keys.Ctrl) then openFileList()
+
     if input.keyPress(input.Keys.F6) then insert("This\nIs\na\ntest")
 
     if input.key(input.Keys.F1) then scroll_y += 1 ;
@@ -600,4 +613,13 @@ function checkMouseWheel()
     if lines.length() > num_lines then scroll_y = math.min(scroll_y, lines.length() * 9 - num_lines * 9)
 
     lastWheelX = wheelX ; lastWheelY = wheelY
+end
+
+function openFileList()
+    filelist = new editor_file_list.FileList(["File1", "File2", "lange filename", "file333", "File1", "File2", "lange filename", "file333", "File1", "File2", "lange filename", "file333", "File1", "file333", "File1", "File2", "lange filename", "file333", "File1", "file333", "File1", "File2", "lange filename", "file333", "File1 laatste"], openFilename, "file333")
+end
+
+function openFilename(filename)
+    debug_print("open file: " + filename + "\n")
+    filelist = empty
 end
