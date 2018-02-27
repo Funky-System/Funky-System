@@ -67,13 +67,14 @@ class BarButton
     end
 end
 
-var codeButton = new BarButton(2, 2, 40, 12, "Code", color.Names.Gray, color.Names.DarkGray)
-var gfxButton = new BarButton(44, 2, 40, 12, "Gfx", color.Names.ForestGreen, color.Names.DarkGreen)
-var mapButton = new BarButton(86, 2, 40, 12, "Map", color.Names.DarkRed, color.Names.Bordeaux)
-var sfxButton = new BarButton(128, 2, 40, 12, "Sfx", color.Names.LightBrown, color.Names.Brown)
-var musicButton = new BarButton(170, 2, 40, 12, "Music", color.Names.SteelBlue, color.Names.DarkBlue)
+var codeButton = new BarButton(2, 2, 20, 12, "P", color.Names.Gray, color.Names.DarkGray)
+var gfxButton = new BarButton(24, 2, 20, 12, "G", color.Names.ForestGreen, color.Names.DarkGreen)
+var mapButton = new BarButton(46, 2, 20, 12, "M", color.Names.DarkRed, color.Names.Bordeaux)
+var sfxButton = new BarButton(68, 2, 20, 12, "S", color.Names.LightBrown, color.Names.Brown)
+var musicButton = new BarButton(90, 2, 20, 12, "M", color.Names.SteelBlue, color.Names.DarkBlue)
 
 var leftButtonDown = false
+var projectName = "(unnamed)"
 
 export function update()
     draw.cls(color.Names.Black)
@@ -118,6 +119,9 @@ export function update()
     mapButton.draw(mode == Modes.Map)
     sfxButton.draw(mode == Modes.Sfx)
     musicButton.draw(mode == Modes.Music)
+
+    draw.setFont("9px")
+    draw.text(256 - 6 - draw.textWidth(projectName), 4, projectName, color.Names.LightGray)
 
     if input.keyPress(input.Keys.Escape) then
         return true

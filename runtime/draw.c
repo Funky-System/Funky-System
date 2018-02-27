@@ -258,6 +258,22 @@ static inline int put_char(char c, int x, int y) {
     return 0;
 }
 
+static inline int char_width(char c) {
+    if (c == ' ') {
+        return current_font->space_width;
+    }
+    if (c == '\t') {
+        return current_font->space_width * 4;
+    }
+    fs_glyph_t *glyph = &current_font->glyphs[0];
+    for (int i = 0; current_font->glyphs[i].character != 0; i++, glyph = &current_font->glyphs[i]) {
+        if (glyph->character == c) {
+            return glyph->width;
+        }
+    }
+    return 0;
+}
+
 static inline int put_char_mono(char c, int x, int y) {
     if (c == ' ') {
         return current_font->max_width;
@@ -290,6 +306,19 @@ static void text(CPU_State *state) {
             x += put_char(str[i], x, y) + 1;
         }
     });
+}
+
+static void textWidth(CPU_State *state) {
+    const char *str = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
+
+    size_t len = strlen(str);
+    unsigned int x = 0;
+    for (int i = 0; i < len; i++) {
+        x += char_width(str[i]) + 1;
+    }
+    if (x > 0) x--;
+
+    state->rr = (vm_value_t) { .uint_value = x, .type = VM_TYPE_UINT };
 }
 
 static void textMono(CPU_State *state) {
@@ -343,6 +372,7 @@ void register_bindings_draw(CPU_State *state) {
     register_syscall(state, "pixel", pixel);
     register_syscall(state, "getPixel", getPixel);
     register_syscall(state, "text", text);
+    register_syscall(state, "textWidth", textWidth);
     register_syscall(state, "textMono", textMono);
     register_syscall(state, "setFont", setFont);
     register_syscall(state, "clip", clip);
