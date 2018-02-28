@@ -1,5 +1,5 @@
 export function getPath()
-    if projectName == "(unnamed)" then return empty
+    if projectName == "(unnamed)" then return "funky-projects/.temp"
     return "funky-projects/" + projectName
 end
 

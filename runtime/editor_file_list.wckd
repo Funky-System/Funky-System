@@ -52,7 +52,7 @@ export class FileList
             draw.fillRect(1, 32 + (this.index - this.from) * 10, 147, 9, color.Names.Gray)
         end
         draw.text(3, 20, "New file...", color.Names.White)
-        draw.clip(0, 16, 150, 166)
+        draw.clip(0, 16, 148, 166)
         for i in math.max(0, this.from)..math.min(this.files.length(), this.from + 15) do
             draw.text(3, 33 + (i - this.from) * 10, this.files[i], color.Names.White)
         end
@@ -99,7 +99,10 @@ export class FileList
                     newFile(this.callback)
                     this.index = -2
                 else
-                    this.callback(this.files[this.index])
+                    var index = this.from + ((mouse_y - 32) / 10)
+                    if index < this.files.length() then
+                        this.callback(this.files[this.index])
+                    end
                 end
             else
                 # clicked outside

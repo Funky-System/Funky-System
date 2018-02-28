@@ -189,13 +189,21 @@ function doRenameProject(res = true)
     renameMsgbox = empty
     if !res then return;
 
-    editor_state.setProjectName(rename_name)
 
     if fs.exists("funky-projects/" + rename_name) then
         fs.rmdir("funky-projects/" + rename_name, true)
     end
-    fs.mkdir("funky-projects/" + rename_name)
 
+    if editor_state.getProjectName() == "(unnamed)" then
+        fs.rename("funky-projects/.temp", "funky-projects/" + rename_name)
+    else
+        fs.rename("funky-projects/" + editor_state.getProjectName(), "funky-projects/" + rename_name)
+    end
+
+    editor_state.setProjectName(rename_name)
     rename_prompt = empty
 end
 
+if !fs.exists("funky-projects") then fs.mkdir("funky-projects")
+if fs.exists("funky-projects/.temp") then fs.rmdir("funky-projects/.temp", true)
+fs.mkdir("funky-projects/.temp")

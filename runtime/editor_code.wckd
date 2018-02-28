@@ -124,7 +124,9 @@ export function editor_draw()
     # statusbar
     draw.fillRect(0, 183, 256, 9, colors.BlueGray)
     draw.setFont("5px")
+    draw.clip(0, 183, 80, 9)
     draw.text(2, 185, current_filename, colors.LightGray)
+    draw.clip()
     draw.fillRect(80, 183, 1, 9, colors.DarkGray)
 
     var posTxt = (cursor_y + 1) + ":" + cursor_x
@@ -645,7 +647,10 @@ end
 var current_filename = "main"
 
 function openFilename(filename)
-    if (filename == empty) then return
+    if (filename == empty) then
+        filelist = empty
+        return
+    end
 
     save()
 
