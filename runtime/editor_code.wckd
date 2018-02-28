@@ -18,7 +18,7 @@ var syntaxColors = {
     "Keyword": colors.Orange,
     "Comment": colors.BlueGray,
     "Numeric": colors.LightBlue,
-    "String": colors.Green
+    "String": colors.ForestGreen
 }
 
 var lines = [""]
@@ -38,10 +38,34 @@ var keywords = [
     "continue"
     ]
 function drawLine(x, y, line)
+    #find strings
+    var origLine = line
+
+    var stringIndex = line.indexOf("\"")
+    while stringIndex != empty do
+        var stringEnd = line.indexOf("\"", stringIndex + 1)
+        while stringEnd != empty && line[stringEnd - 1] == '\\' do
+            stringEnd = line.indexOf("\"", stringEnd + 1)
+        end
+
+        if stringEnd == empty then
+            stringEnd = line.length()
+        else
+            stringEnd += 1
+        end
+
+        var str = line[stringIndex:stringEnd]
+        line = line[0:stringIndex] + " ".repeat(stringEnd - stringIndex) + line[stringEnd:-1]
+        draw.textMono(x + stringIndex * 6, y, str, syntaxColors.String)
+
+        stringIndex = line.indexOf("\"", stringEnd + 1)
+    end
+
+
     # find comment
     var commentIndex = line.indexOf("#")
     if commentIndex != empty then
-        var comment = line[commentIndex:-1]
+        var comment = origLine[commentIndex:-1]
         line = line[0:commentIndex]
         draw.textMono(x + commentIndex * 6, y, comment, syntaxColors.Comment)
     end
@@ -441,7 +465,12 @@ function processInput(c)
             end
         end
     else if c == "home" then
-        cursor_x = 0
+        var trimStart = lines[cursor_y].length() - lines[cursor_y].trimLeft().length()
+        if (cursor_x == trimStart) then
+            cursor_x = 0
+        else
+            cursor_x = trimStart
+        end
     else if c == "end" then
         cursor_x = lines[cursor_y].length()
     else if c == "delete" then

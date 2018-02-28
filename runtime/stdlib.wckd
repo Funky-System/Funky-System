@@ -108,9 +108,9 @@ function stringEndsWith(str)
 end
 
 (prototypeof string).indexOf = stringIndexOf
-function stringIndexOf(str)
+function stringIndexOf(str, start = 0)
     var len = str.length()
-    for i in 0..this.length() do
+    for i in start..this.length() do
         if this.value[i:i + len] == str then
            return i
         end
@@ -119,11 +119,11 @@ function stringIndexOf(str)
 end
 
 (prototypeof string).indexOfAny = stringIndexOfAny
-function stringIndexOfAny(strArray)
+function stringIndexOfAny(strArray, start = 0)
     var first = -1
     var firstStr = ""
     for str in strArray do
-        var i = this.indexOf(str)
+        var i = this.indexOf(str, start)
         if i != empty && (first == -1 || i < first) then
             first = i
             firstStr = str
