@@ -109,6 +109,11 @@ export function update()
         # return true
     end
 
+    if input.keyPress(input.Keys.R) && input.key(input.Keys.Ctrl) then
+        debug_print("Run program\n")
+        run()
+    end
+
 
     if rename_prompt != empty && renameMsgbox == empty then
         rename_prompt.draw()
@@ -153,6 +158,32 @@ function handle_input()
             rename_prompt = new editor_prompt.Prompt("Save project as:", renameProject, title)
         end
     end
+end
+
+function run(path)
+#    var updateFun
+#    asm "
+#        ld.arg 0
+#        link.pop
+#        dup
+#        ld.mapitem \"@init\"
+#        call.pop 0
+#        ld.mapitem \"fupdate\"
+#        is.empty
+#        brtrue skipUpdate
+#        st.local 1
+#        exe_loop:
+#        ld.local 1
+#        call.pop 0
+#        ld.reg %rr
+#        brtrue skipUpdate
+#        call pump_events, 0
+#        jmp exe_loop
+#        skipUpdate:
+#        pop
+#        ld.arg 0
+#        unlink.pop
+#    "
 end
 
 function renameProject(name)

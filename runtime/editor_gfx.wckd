@@ -1,7 +1,33 @@
 import draw
+import color
+
+function draw_checkerboard(x, y, w, h, s = 16)
+    for c_x in 0..(w/s) do ; for c_y in 0..(h/s) do
+        var c = color.Names.White
+        if (c_x % 2 == 0 && c_y % 2 == 0) || (c_x % 2 == 1 && c_y % 2 == 1) then c = color.Names.LightGray
+        draw.fillRect(x + c_x * s, y + c_y * s, s, s, c)
+    end; end
+end
 
 export function editor_draw()
     draw.fillCircle(100, 100, 20, 3)
+
+    draw.rect(4, 20, 130, 130, color.Names.BlueGray)
+    draw_checkerboard(5, 21, 128, 128)
+
+    var width = 10
+    #draw.fillRect(2, 151, 11 * width + 2, 3 * width + 2, color.Names.Black)
+    for c in 0..33 do
+        var row = c / 11
+        var col = c % 11
+        if c == 32 then
+            draw_checkerboard(23 + width * col, 156 + width * row, width, width, 2)
+        else
+            draw.fillRect(23 + width * col, 156 + width * row, width, width, c)
+        end
+    end
+
+    draw.fillRect(188, 20, 64, 64, color.Names.Black)
 end
 
 export function editor_update()
