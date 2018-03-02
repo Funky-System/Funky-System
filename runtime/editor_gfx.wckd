@@ -325,10 +325,10 @@ export function editor_update()
 
     if input.rightButtonPressed() then
         rightButtonDown = true
-        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(false, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
     else if rightButtonDown then
         rightButtonDown = false
-        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolUp(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolUp(false, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
     end
 
     if input.leftButtonPressed() || input.rightButtonPressed() then
