@@ -21,3 +21,7 @@ export function abs(n)
         return n
     end
 end
+
+export function clamp(val, val_min, val_max)
+    return max(val_min, min(val_max, val))
+end
