@@ -37,6 +37,10 @@ end
 var mode = Modes.Pen
 
 var currentSheet = draw.createTexture()
+draw.renderToTexture(currentSheet)
+draw.cls(color.Names.Transparent)
+draw.renderToTexture()
+
 var currentPrimaryColor = color.Names.Black
 var currentSecondaryColor = color.Names.Transparent
 
@@ -213,16 +217,29 @@ export function editor_draw()
 end
 
 function drawSelection(x, y, w, h, s, spr_x, spr_y)
-    var x1 = math.clamp(x + (select_x1 - spr_x) * w / s, x, x + w)
-    var x2 = math.clamp(x + (select_x2 - spr_x) * w / s - 1, x, x + w)
-    var y1 = math.clamp(y + (select_y1 - spr_y) * h / s, y, y + h)
-    var y2 = math.clamp(y + (select_y2 - spr_y) * h / s - 1, y, y + h)
+    var sx1 = select_x1
+    var sx2 = select_x2
+    if sx2 < sx1 then
+        sx1 = select_x2
+        sx2 = select_x1 + 1
+    end
+    var sy1 = select_y1
+    var sy2 = select_y2
+    if sy2 < sy1 then
+        sy1 = select_y2
+        sy2 = select_y1 + 1
+    end
+
+    var x1 = math.clamp(x + (sx1 - spr_x) * w / s, x, x + w)
+    var x2 = math.clamp(x + (sx2 - spr_x) * w / s - 1, x, x + w)
+    var y1 = math.clamp(y + (sy1 - spr_y) * h / s, y, y + h)
+    var y2 = math.clamp(y + (sy2 - spr_y) * h / s - 1, y, y + h)
 
     draw.clip(x1, y1, x2 - x1 + 1, y2 - y1 + 1)
-    if select_y1 >= spr_y then dottedLineHorizontal(x1, x2, y1) ;
-    if select_y2 <= spr_y + s then dottedLineHorizontal(x1, x2, y2) ;
-    if select_x1 >= spr_x then dottedLineVertical(y1, y2, x1) ;
-    if select_x2 <= spr_x + s then dottedLineVertical(y1, y2, x2) ;
+    if sy1 >= spr_y then dottedLineHorizontal(x1, x2, y1) ;
+    if sy2 <= spr_y + s then dottedLineHorizontal(x1, x2, y2) ;
+    if sx1 >= spr_x then dottedLineVertical(y1, y2, x1) ;
+    if sx2 <= spr_x + s then dottedLineVertical(y1, y2, x2) ;
     draw.clip()
 end
 
@@ -438,8 +455,18 @@ function toolDown(primary, mouse_x, mouse_y)
             selecting = true
         end
         if selecting then
-            select_x2 = mouse_x + 1
-            select_y2 = mouse_y + 1
+            if mouse_x < select_x1 then
+                select_x2 = mouse_x
+            else
+                select_x2 = mouse_x + 1
+            end
+
+            if mouse_y < select_y1 then
+                select_y2 = mouse_y
+            else
+                select_y2 = mouse_y + 1
+            end
+
         else
             if mouse_x >= select_x1 && mouse_x < select_x2 && mouse_y >= select_y1 && mouse_y < select_y2 then
                 if select_move_mouse_x == empty then
@@ -506,6 +533,25 @@ function toolUp(primary, mouse_x, mouse_y)
             selecting = false
             draw.renderToTexture(temporaryTexture)
             draw.cls(color.Names.Transparent)
+
+            var sx1 = select_x1
+            var sx2 = select_x2
+            if sx2 < sx1 then
+                sx1 = select_x2
+                sx2 = select_x1 + 1
+            end
+            var sy1 = select_y1
+            var sy2 = select_y2
+            if sy2 < sy1 then
+                sy1 = select_y2
+                sy2 = select_y1 + 1
+            end
+
+            select_x1 = sx1
+            select_x2 = sx2
+            select_y1 = sy1
+            select_y2 = sy2
+
             draw.sprite(currentSheet, select_x1, select_y1, 0, 0, select_x2 - select_x1, select_y2 - select_y1)
             draw.renderToTexture(currentSheet)
             draw.fillRect(select_x1, select_y1, select_x2 - select_x1, select_y2 - select_y1, color.Names.Transparent)
