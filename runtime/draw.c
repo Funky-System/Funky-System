@@ -12,21 +12,21 @@
 static fs_display_t *display = NULL;
 
 struct color_t {
-    Uint8 r, g, b;
+    Uint8 r, g, b, a;
 };
 
 static struct color_t colors[] = {
-        { .r = 252, .g = 92, .b = 101 }, { .r = 253, .g = 150, .b = 68 }, { .r = 254, .g = 211, .b = 48 },
-        { .r = 38, .g = 222, .b = 129 }, { .r = 43, .g = 203, .b = 186 }, { .r = 69, .g = 170, .b = 242 },
-        { .r = 75, .g = 123, .b = 236 }, { .r = 165, .g = 94, .b = 234 }, { .r = 235, .g = 59, .b = 90 },
-        { .r = 250, .g = 130, .b = 49 }, { .r = 247, .g = 183, .b = 49 }, { .r = 32, .g = 191, .b = 107 },
-        { .r = 15, .g = 185, .b = 177 }, { .r = 45, .g = 152, .b = 218 }, { .r = 56, .g = 103, .b = 214 },
-        { .r = 136, .g = 84, .b = 208 }, { .r = 186, .g = 36, .b = 62 }, { .r = 255, .g = 204, .b = 204 },
-        { .r = 190, .g = 125, .b = 80 }, { .r = 29, .g = 150, .b = 86 }, { .r = 34, .g = 108, .b = 161 },
-        { .r = 209, .g = 216, .b = 224 }, { .r = 119, .g = 140, .b = 163 }, { .r = 50, .g = 50, .b = 56 },
-        { .r = 129, .g = 26, .b = 44 }, { .r = 255, .g = 184, .b = 184 }, { .r = 143, .g = 90, .b = 54 },
-        { .r = 27, .g = 113, .b = 68 }, { .r = 9, .g = 74, .b = 120 }, { .r = 165, .g = 177, .b = 194 },
-        { .r = 75, .g = 101, .b = 132 }, { .r = 0, .g = 0, .b = 0 }
+        { .r = 252, .g = 92, .b = 101, .a = 255 }, { .r = 253, .g = 150, .b = 68, .a = 255 }, { .r = 254, .g = 211, .b = 48, .a = 255 },
+        { .r = 38, .g = 222, .b = 129, .a = 255 }, { .r = 43, .g = 203, .b = 186, .a = 255 }, { .r = 69, .g = 170, .b = 242, .a = 255 },
+        { .r = 75, .g = 123, .b = 236, .a = 255 }, { .r = 165, .g = 94, .b = 234, .a = 255 }, { .r = 235, .g = 59, .b = 90, .a = 255 },
+        { .r = 250, .g = 130, .b = 49, .a = 255 }, { .r = 247, .g = 183, .b = 49, .a = 255 }, { .r = 32, .g = 191, .b = 107, .a = 255 },
+        { .r = 15, .g = 185, .b = 177, .a = 255 }, { .r = 45, .g = 152, .b = 218, .a = 255 }, { .r = 56, .g = 103, .b = 214, .a = 255 },
+        { .r = 136, .g = 84, .b = 208, .a = 255 }, { .r = 186, .g = 36, .b = 62, .a = 255 }, { .r = 255, .g = 204, .b = 204, .a = 255 },
+        { .r = 190, .g = 125, .b = 80, .a = 255 }, { .r = 29, .g = 150, .b = 86, .a = 255 }, { .r = 34, .g = 108, .b = 161, .a = 255 },
+        { .r = 209, .g = 216, .b = 224, .a = 255 }, { .r = 119, .g = 140, .b = 163, .a = 255 }, { .r = 50, .g = 50, .b = 56, .a = 255 },
+        { .r = 129, .g = 26, .b = 44, .a = 255 }, { .r = 255, .g = 184, .b = 184, .a = 255 }, { .r = 143, .g = 90, .b = 54, .a = 255 },
+        { .r = 27, .g = 113, .b = 68, .a = 255 }, { .r = 9, .g = 74, .b = 120, .a = 255 }, { .r = 165, .g = 177, .b = 194, .a = 255 },
+        { .r = 75, .g = 101, .b = 132, .a = 255 }, { .r = 0, .g = 0, .b = 0, .a = 255 }, { .r = 0, .g = 0, .b = 0, .a = 0 }
 };
 
 fs_font_t *current_font = &Funky5;
@@ -46,14 +46,15 @@ fs_font_t *current_font = &Funky5;
 #define SET_COLOR_FOR_CALLS(vm_val, calls) { \
     struct color_t __oldColor; \
     if ((vm_val)->type != VM_TYPE_EMPTY) { \
-       Uint8 __a; \
-       SDL_GetRenderDrawColor(display->renderer, &__oldColor.r, &__oldColor.g, &__oldColor.b, &__a); \
+       SDL_GetRenderDrawColor(display->renderer, &__oldColor.r, &__oldColor.g, &__oldColor.b, &__oldColor.a); \
        struct color_t *__color = &colors[(vm_val)->int_value]; \
-       SDL_SetRenderDrawColor(display->renderer, __color->r, __color->g, __color->b, 255); \
+       SDL_SetRenderDrawColor(display->renderer, __color->r, __color->g, __color->b, __color->a); \
     } \
+    SDL_SetRenderDrawBlendMode(display->renderer, SDL_BLENDMODE_NONE); \
     {calls} \
+    SDL_SetRenderDrawBlendMode(display->renderer, SDL_BLENDMODE_BLEND); \
     if ((vm_val)->type != VM_TYPE_EMPTY) \
-        SDL_SetRenderDrawColor(display->renderer, __oldColor.r, __oldColor.g, __oldColor.b, 255); \
+        SDL_SetRenderDrawColor(display->renderer, __oldColor.r, __oldColor.g, __oldColor.b, __oldColor.a); \
 }
 
 static void camera(CPU_State *state) {
@@ -359,6 +360,118 @@ static void clip(CPU_State *state) {
     }
 }
 
+static SDL_Texture** textures = NULL;
+static vm_type_t numTextures = 0;
+
+static void createTexture(CPU_State *state) {
+    if (textures == NULL) {
+        textures = malloc(sizeof(SDL_Texture*) * numTextures);
+    }
+
+    numTextures++;
+    textures = realloc(textures, sizeof(SDL_Texture*) * numTextures);
+
+    textures[numTextures - 1] = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 64, 64);
+    SDL_SetTextureBlendMode(textures[numTextures - 1], SDL_BLENDMODE_BLEND);
+
+    VM_RETURN_UINT(state, numTextures - 1);
+}
+
+static void destroyTexture(CPU_State *state) {
+    SDL_DestroyTexture(textures[STACK_VALUE(state, 0)->uint_value]);
+}
+
+static void renderToTexture(CPU_State *state) {
+    if (STACK_VALUE(state, 0)->type == VM_TYPE_EMPTY) {
+        SDL_SetRenderTarget(display->renderer, NULL);
+    } else {
+        SDL_SetRenderTarget(display->renderer, textures[STACK_VALUE(state, 0)->uint_value]);
+    }
+}
+
+static inline double getDoubleFromStack(CPU_State *state, vm_type_signed_t n) {
+    return STACK_VALUE(state, n)->type == VM_TYPE_FLOAT ? STACK_VALUE(state, n)->float_value :
+           STACK_VALUE(state, n)->type == VM_TYPE_INT ? STACK_VALUE(state, n)->int_value : STACK_VALUE(state, n)->uint_value;
+}
+
+static inline int getIntFromStack(CPU_State *state, vm_type_signed_t n) {
+    return STACK_VALUE(state, n)->type == VM_TYPE_FLOAT ? (int)STACK_VALUE(state, n)->float_value :
+           STACK_VALUE(state, n)->type == VM_TYPE_INT ? STACK_VALUE(state, n)->int_value : (int)STACK_VALUE(state, n)->uint_value;
+}
+
+static void spriteEx(CPU_State *state) {
+    // n, x, y, src_x, src_y, src_w, src_h, scale_x, scale_y, flip_x, flip_y, angle, rot_x, rot_y
+
+    SDL_Texture* sheet = textures[STACK_VALUE(state, -13)->uint_value];
+    int src_x = getIntFromStack(state, -12);
+    int src_y = getIntFromStack(state, -11);
+    int x = getIntFromStack(state, -10);
+    int y = getIntFromStack(state, -9);
+    int src_w = getIntFromStack(state, -8);
+    int src_h = getIntFromStack(state, -7);
+    double scale_x = getDoubleFromStack(state, -6);
+    double scale_y = getDoubleFromStack(state, -5);
+    int flip_x = getIntFromStack(state, -4);
+    int flip_y = getIntFromStack(state, -3);
+    double angle = getDoubleFromStack(state, -2);
+    int rot_c_x = getIntFromStack(state, -1);
+    int rot_c_y = getIntFromStack(state, 0);
+
+    SDL_Rect srcrect, dstrect;
+    SDL_Point center;
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+
+    if (flip_x) flip |= SDL_FLIP_VERTICAL;
+    if (flip_y) flip |= SDL_FLIP_HORIZONTAL;
+
+    center.x = rot_c_x;
+    center.y = rot_c_y;
+
+    srcrect.x = src_x;
+    srcrect.y = src_y;
+    srcrect.w = src_w;
+    srcrect.h = src_h;
+
+    dstrect.x = x;
+    dstrect.y = y;
+    dstrect.w = (int) (src_w * scale_x);
+    dstrect.h = (int) (src_h * scale_y);
+
+    if (STACK_VALUE(state, 1)->type == VM_TYPE_EMPTY || STACK_VALUE(state, 0)->type == VM_TYPE_EMPTY) {
+        SDL_RenderCopyEx(display->renderer, sheet, &srcrect, &dstrect, angle, NULL, flip);
+    } else {
+        SDL_RenderCopyEx(display->renderer, sheet, &srcrect, &dstrect, angle, &center, flip);
+    }
+}
+
+static void sprite(CPU_State *state) {
+    // n, x, y, src_x, src_y, src_w, src_h, scale_x, scale_y
+
+    SDL_Texture* sheet = textures[STACK_VALUE(state, -8)->uint_value];
+    int src_x = getIntFromStack(state, -7);
+    int src_y = getIntFromStack(state, -6);
+    int x = getIntFromStack(state, -5);
+    int y = getIntFromStack(state, -4);
+    int src_w = getIntFromStack(state, -3);
+    int src_h = getIntFromStack(state, -2);
+    double scale_x = getDoubleFromStack(state, -1);
+    double scale_y = getDoubleFromStack(state, -0);
+
+    SDL_Rect srcrect, dstrect;
+
+    srcrect.x = src_x;
+    srcrect.y = src_y;
+    srcrect.w = src_w;
+    srcrect.h = src_h;
+
+    dstrect.x = x;
+    dstrect.y = y;
+    dstrect.w = (int) (src_w * scale_x);
+    dstrect.h = (int) (src_h * scale_y);
+
+    SDL_RenderCopy(display->renderer, sheet, &srcrect, &dstrect);
+}
+
 void register_bindings_draw(CPU_State *state) {
     display = get_display();
     register_syscall(state, "camera", camera);
@@ -376,4 +489,10 @@ void register_bindings_draw(CPU_State *state) {
     register_syscall(state, "textMono", textMono);
     register_syscall(state, "setFont", setFont);
     register_syscall(state, "clip", clip);
+
+    register_syscall(state, "createTexture", createTexture);
+    register_syscall(state, "destroyTexture", destroyTexture);
+    register_syscall(state, "renderToTexture", renderToTexture);
+    register_syscall(state, "spriteEx", spriteEx);
+    register_syscall(state, "sprite", sprite);
 }

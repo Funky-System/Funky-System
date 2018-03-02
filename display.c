@@ -36,6 +36,7 @@ fs_display_t display_init() {
 
     display.renderer = SDL_CreateRenderer(display.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetScale(display.renderer, INITIAL_SCALE, INITIAL_SCALE);
+    SDL_SetRenderDrawBlendMode(display.renderer, SDL_BLENDMODE_BLEND);
     //SDL_RenderSetLogicalSize(display.renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
     //SDL_RenderSetIntegerScale(display.renderer, SDL_TRUE);
     SDL_SetHint (SDL_HINT_RENDER_SCALE_QUALITY, 0);

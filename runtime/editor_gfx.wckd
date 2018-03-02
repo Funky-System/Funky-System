@@ -1,35 +1,317 @@
+import math
 import draw
 import color
+import input
 
-function draw_checkerboard(x, y, w, h, s = 16)
-    for c_x in 0..(w/s) do ; for c_y in 0..(h/s) do
-        var c = color.Names.White
-        if (c_x % 2 == 0 && c_y % 2 == 0) || (c_x % 2 == 1 && c_y % 2 == 1) then c = color.Names.LightGray
-        draw.fillRect(x + c_x * s, y + c_y * s, s, s, c)
-    end; end
+function debug_print(str)
+    asm "
+        ld.arg 0
+        conv.str
+        syscall.byname \"debug_print\"
+        pop
+    "
 end
 
+var checkerboardTexture = empty
+
+function draw_checkerboard(x, y, w, h, s = 16)
+    if checkerboardTexture == empty then
+        checkerboardTexture = draw.createTexture()
+        draw.renderToTexture(checkerboardTexture)
+        for c_x in 0..64 do ; for c_y in 0..64 do
+            var c = color.Names.White
+            if (c_x % 2 == 0 && c_y % 2 == 0) || (c_x % 2 == 1 && c_y % 2 == 1) then c = color.Names.LightGray
+            draw.pixel(c_x, c_y, c)
+        end; end
+        draw.renderToTexture()
+    end
+
+    draw.sprite(checkerboardTexture, 0, 0, x, y, w / s, h / s, s, s)
+end
+
+enum Modes
+    Pen, Paintbucket, Paintpixels, Line, Circle, Select, Picker
+end
+
+var mode = Modes.Pen
+
+var currentSheet = draw.createTexture()
+var currentPrimaryColor = color.Names.Black
+var currentSecondaryColor = color.Names.Transparent
+
+var colors = [
+    color.Names.LightRed,
+    color.Names.Red,
+    color.Names.DarkRed,
+    color.Names.Bordeaux,
+    color.Names.LightGreen,
+    color.Names.Green,
+    color.Names.ForestGreen,
+    color.Names.DarkGreen,
+    color.Names.LightTeal,
+    color.Names.Teal,
+    color.Names.White,
+
+    color.Names.LightPink,
+    color.Names.Pink,
+    color.Names.LightBrown,
+    color.Names.Brown,
+    color.Names.LightOrange,
+    color.Names.Orange,
+    color.Names.LightYellow,
+    color.Names.Yellow,
+    color.Names.LightPurple,
+    color.Names.Purple,
+    color.Names.Black,
+
+    color.Names.LightBlue,
+    color.Names.Blue,
+    color.Names.LightNavyBlue,
+    color.Names.NavyBlue,
+    color.Names.SteelBlue,
+    color.Names.DarkBlue,
+    color.Names.LightGray,
+    color.Names.Gray,
+    color.Names.BlueGray,
+    color.Names.DarkGray,
+    color.Names.Transparent
+]
+
+var edit_size = 8
+var sprite_x = 0
+var sprite_y = 0
+
 export function editor_draw()
-    draw.fillCircle(100, 100, 20, 3)
+    # paint surface
+    draw.rect(44, 20, 130, 130, color.Names.BlueGray)
+    draw_checkerboard(45, 21, 128, 128, 128 / edit_size / 2)
+    draw.sprite(currentSheet, sprite_x, sprite_y, 45, 21, edit_size, edit_size, 128 / edit_size, 128 / edit_size)
 
-    draw.rect(4, 20, 130, 130, color.Names.BlueGray)
-    draw_checkerboard(5, 21, 128, 128)
-
+    # colors
     var width = 10
     #draw.fillRect(2, 151, 11 * width + 2, 3 * width + 2, color.Names.Black)
     for c in 0..33 do
         var row = c / 11
         var col = c % 11
         if c == 32 then
-            draw_checkerboard(23 + width * col, 156 + width * row, width, width, 2)
+            draw_checkerboard(63 + width * col, 156 + width * row, width, width, 2)
         else
-            draw.fillRect(23 + width * col, 156 + width * row, width, width, c)
+            draw.fillRect(63 + width * col, 156 + width * row, width, width, colors[c])
         end
     end
 
-    draw.fillRect(188, 20, 64, 64, color.Names.Black)
+    for ci in 0..33 do
+        var ro = ci / 11
+        var co = ci % 11
+        if (currentSecondaryColor == colors[ci]) then
+            draw.rect(63 + width * co, 156 + width * ro, width, width, color.Names.White)
+            draw.rect(62 + width * co, 155 + width * ro, width + 2, width + 2, color.Names.Black)
+        end
+    end
+
+    for cj in 0..33 do
+        var rj = cj / 11
+        var ck = cj % 11
+        if (currentPrimaryColor == colors[cj]) then
+            draw.rect(63 + width * ck, 156 + width * rj, width, width, color.Names.Black)
+            draw.rect(62 + width * ck, 155 + width * rj, width + 2, width + 2, color.Names.White)
+        end
+    end
+
+    # current colors
+    #secondary
+    if currentSecondaryColor == color.Names.Transparent then
+        draw_checkerboard(42, 167, 16, 16, 4)
+    else
+        draw.fillRect(42, 167, 16, 16, currentSecondaryColor)
+    end
+    draw.rect(42, 167, 16, 16, color.Names.White)
+    draw.rect(41, 166, 18, 18, color.Names.Black)
+    #primary
+    if currentPrimaryColor == color.Names.Transparent then
+        draw_checkerboard(34, 159, 16, 16, 4)
+    else
+        draw.fillRect(34, 159, 16, 16, currentPrimaryColor)
+    end
+    draw.rect(34, 159, 16, 16, color.Names.Black)
+    draw.rect(33, 158, 18, 18, color.Names.White)
+
+    # sprite sheet
+    #draw.fillRect(187, 21, 64, 64, color.Names.Black)
+    draw_checkerboard(187, 21, 64, 64, 4)
+    draw.sprite(currentSheet, 0, 0, 187, 21, 64, 64, 1, 1)
+
+    draw.fillRect(187, 85, 44, 9, color.Names.BlueGray) # num
+    draw.setFont("5px")
+    draw.clip(188, 85, 64, 9)
+    draw.text(190, 87, "001", color.Names.LightGray)
+    draw.clip()
+    btn_nextSheet.draw()
+    btn_prevSheet.draw()
+
+    draw.rect(186 + sprite_x, 20 + sprite_y, edit_size + 2, edit_size + 2, color.Names.Black)
+    draw.rect(185 + sprite_x, 19 + sprite_y, edit_size + 4, edit_size + 4, color.Names.White)
+
+    # zoom
+    draw.fillRect(187, 115, 44, 9, color.Names.BlueGray) # num
+    draw.text(188, 108, "Zoom", color.Names.Gray)
+    draw.clip(188, 115, 64, 9)
+    draw.textMono(190, 117, edit_size + "x" + edit_size, color.Names.LightGray)
+    draw.clip()
+    btn_zoomIn.draw()
+    btn_zoomOut.draw()
+
+    btn_pen.draw(mode == Modes.Pen)
+    btn_paintbucket.draw(mode == Modes.Paintbucket)
+    btn_paintpixels.draw(mode == Modes.Paintpixels)
+    btn_line.draw(mode == Modes.Line)
+    btn_circle.draw(mode == Modes.Circle)
+    btn_select.draw(mode == Modes.Select)
+    btn_picker.draw(mode == Modes.Picker)
+
+    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+    if input.leftButtonPressed() then
+        btn_pen.hitTest(true, mouse_x, mouse_y)
+        btn_paintbucket.hitTest(true, mouse_x, mouse_y)
+        btn_paintpixels.hitTest(true, mouse_x, mouse_y)
+        btn_line.hitTest(true, mouse_x, mouse_y)
+        btn_circle.hitTest(true, mouse_x, mouse_y)
+        btn_select.hitTest(true, mouse_x, mouse_y)
+        btn_picker.hitTest(true, mouse_x, mouse_y)
+
+        btn_nextSheet.hitTest(true, mouse_x, mouse_y)
+        btn_prevSheet.hitTest(true, mouse_x, mouse_y)
+        btn_zoomIn.hitTest(true, mouse_x, mouse_y)
+        btn_zoomOut.hitTest(true, mouse_x, mouse_y)
+    end
+
 end
 
+var leftButtonDown = false
+var rightButtonDown = false
 export function editor_update()
+    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+    if input.leftButtonPressed() then
+        leftButtonDown = true
+        # edit surface
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        # minimap 187, 21
+        if (mouse_x >= 187 && mouse_x < 187 + 64 && mouse_y >= 21 && mouse_y < 21 + 64) then
+            sprite_x = math.max(0, math.min(64 - edit_size, (mouse_x - 187) - edit_size / 2));
+            sprite_y = math.max(0, math.min(64 - edit_size, (mouse_y - 21) - edit_size / 2));
+        end
+    else if leftButtonDown then
+        leftButtonDown = false
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolUp(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        if btn_pen.hitTest(false, mouse_x, mouse_y) then mode = Modes.Pen ;
+        if btn_paintbucket.hitTest(false, mouse_x, mouse_y) then mode = Modes.Paintbucket ;
+        if btn_paintpixels.hitTest(false, mouse_x, mouse_y) then mode = Modes.Paintpixels ;
+        if btn_line.hitTest(false, mouse_x, mouse_y) then mode = Modes.Line ;
+        if btn_circle.hitTest(false, mouse_x, mouse_y) then mode = Modes.Circle ;
+        if btn_select.hitTest(false, mouse_x, mouse_y) then mode = Modes.Select ;
+        if btn_picker.hitTest(false, mouse_x, mouse_y) then mode = Modes.Picker ;
 
+        if btn_zoomIn.hitTest(false, mouse_x, mouse_y) then
+            if edit_size > 8 then
+                edit_size = math.max(8, edit_size / 2)
+                sprite_x += edit_size / 2
+                sprite_y += edit_size / 2
+            end
+        end
+        if btn_zoomOut.hitTest(false, mouse_x, mouse_y) then
+            edit_size = math.min(64, edit_size * 2)
+            sprite_x = math.max(0, math.min(64 - edit_size, sprite_x - edit_size / 4))
+            sprite_y = math.max(0, math.min(64 - edit_size, sprite_y - edit_size / 4))
+        end
+    end
+
+    if input.rightButtonPressed() then
+        rightButtonDown = true
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(false, (mouse_x - 45) / (128 / edit_size), (mouse_y - 21) / (128 / edit_size)) ;
+    else if rightButtonDown then
+        rightButtonDown = false
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolUp(false, (mouse_x - 45) / (128 / edit_size), (mouse_y - 21) / (128 / edit_size)) ;
+    end
+
+    if input.leftButtonPressed() || input.rightButtonPressed() then
+        for ci in 0..33 do
+            var ro = ci / 11
+            var co = ci % 11
+            var x = 63 + 10 * co, y = 156 + 10 * ro
+            if mouse_x >= x && mouse_x < x + 10 && mouse_y >= y && mouse_y < y + 10 then
+                if input.leftButtonPressed() then currentPrimaryColor = colors[ci] ;
+                if input.rightButtonPressed() then currentSecondaryColor = colors[ci] ;
+            end
+        end
+    end
+end
+
+class ToolButton
+    var caption = ""
+    var x, y, w, h
+    var bgUp, bgDown
+
+    function new(x, y, w, h, caption = "", bgUp = color.Names.BlueGray, bgDown = color.Names.Gray)
+        this.caption = caption
+        this.x = x ; this.y = y ; this.w = w ; this.h = h
+        this.bgUp = bgUp ; this.bgDown = bgDown
+    end
+
+    function draw(down = false)
+        var offset = 3
+        if this.w < 10 then
+            draw.setFont("5px")
+            offset = 2
+        else
+            draw.setFont("7px")
+        end
+        if down then
+            draw.fillRect(this.x, this.y, this.w, this.h - 1, this.bgDown) # fill
+            draw.fillRect(this.x, this.y + this.h - 1, this.w, 1, color.Names.LightGray) # bottom
+            draw.text(this.x + 3, this.y + offset, this.caption, color.Names.White)
+        else
+            draw.fillRect(this.x, this.y, this.w, this.h, this.bgUp) # fill
+            draw.text(this.x + 3, this.y + offset, this.caption, color.Names.White)
+        end
+    end
+
+    function hitTest(down, x, y)
+        if x >= this.x && x <= this.x + this.w then
+            if y >= this.y && y <= this.y + this.h then
+                if down then
+                    this.draw(true)
+                else
+                    this.draw(true)
+                end
+                return true
+            end
+        end
+        return false
+    end
+end
+
+
+var btn_pen = new ToolButton(7, 21, 14, 14, "P")
+var btn_paintbucket = new ToolButton(23, 21, 14, 14, "P")
+var btn_paintpixels = new ToolButton(7, 37, 14, 14, "P")
+var btn_line = new ToolButton(23, 37, 14, 14, "P")
+var btn_circle = new ToolButton(7, 53, 14, 14, "P")
+var btn_select = new ToolButton(23, 53, 14, 14, "P")
+var btn_picker = new ToolButton(7, 69, 14, 14, "P")
+
+var btn_nextSheet = new ToolButton(242, 85, 9, 9, "+")
+var btn_prevSheet = new ToolButton(232, 85, 9, 9, "-")
+
+var btn_zoomIn = new ToolButton(242, 115, 9, 9, "+")
+var btn_zoomOut = new ToolButton(232, 115, 9, 9, "-")
+
+function toolUp(primary, mouse_x, mouse_y)
+
+end
+
+function toolDown(primary, mouse_x, mouse_y)
+    draw.renderToTexture(currentSheet)
+    if primary then draw.pixel(mouse_x, mouse_y, currentPrimaryColor)
+    else draw.pixel(mouse_x, mouse_y, currentSecondaryColor)
+    draw.renderToTexture()
 end
