@@ -79,10 +79,10 @@ static void getPixel(CPU_State *state) {
         /* y */ STACK_VALUE(state, -0)->int_value - display->camera.y,
         1, 1
     };
-    Uint8 pixel[3];
-    SDL_RenderReadPixels(display->renderer, &rect, SDL_PIXELFORMAT_BGR888, pixel, sizeof(pixel));
-    for (int i = 0; i < 32; i++) {
-        if (colors[i].r == pixel[0] && colors[i].g == pixel[1] && colors[i].b == pixel[2]) {
+    Uint8 pixel[4];
+    SDL_RenderReadPixels(display->renderer, &rect, SDL_PIXELFORMAT_BGRA8888, pixel, sizeof(pixel));
+    for (int i = 0; i < 33; i++) {
+        if (colors[i].r == pixel[1] && colors[i].g == pixel[2] && colors[i].b == pixel[3] && colors[i].a == pixel[0]) {
             state->rr.int_value = i;
             state->rr.type = VM_TYPE_INT;
             return;
@@ -101,7 +101,11 @@ static void rect(CPU_State *state) {
     };
 
     SET_COLOR_FOR_CALLS(STACK_VALUE(state, 0), {
-        SDL_RenderDrawRect(display->renderer, &rect);
+        if (rect.w == 1 && rect.h == 1) {
+            SDL_RenderDrawPoint(display->renderer, rect.x, rect.y);
+        } else {
+            SDL_RenderDrawRect(display->renderer, &rect);
+        }
     });
 }
 
@@ -194,10 +198,10 @@ static void fillCircle(CPU_State *state) {
 #define sgn(x) ((x<0)?-1:((x>0)?1:0)) /* macro to return the sign of a number */
 
 static void line(CPU_State *state) {
-    int x1 = STACK_VALUE(state, -4)->int_value - 1 - display->camera.x;
+    int x1 = STACK_VALUE(state, -4)->int_value - display->camera.x;
     int y1 = STACK_VALUE(state, -3)->int_value - display->camera.y;
-    int x2 = STACK_VALUE(state, -2)->int_value - 1 - display->camera.x;
-    int y2 = STACK_VALUE(state, -1)->int_value- display->camera.y;
+    int x2 = STACK_VALUE(state, -2)->int_value - display->camera.x;
+    int y2 = STACK_VALUE(state, -1)->int_value - display->camera.y;
 
     int dx,dy,sdx,sdy,dxabs,dyabs,x,y,px,py;
 
@@ -213,6 +217,7 @@ static void line(CPU_State *state) {
     py = y1;
 
     SET_COLOR_FOR_CALLS(STACK_VALUE(state, 0), {
+        SDL_RenderDrawPoint(display->renderer, px, py);
         if (dxabs >= dyabs) /* the line is more horizontal than vertical */
         {
             for (int i = 0; i < dxabs; i++) {

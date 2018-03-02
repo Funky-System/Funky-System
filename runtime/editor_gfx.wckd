@@ -39,6 +39,9 @@ var currentSheet = draw.createTexture()
 var currentPrimaryColor = color.Names.Black
 var currentSecondaryColor = color.Names.Transparent
 
+var temporaryTexture = draw.createTexture()
+var temporaryToolX = -1, temporaryToolY = -1
+
 var colors = [
     color.Names.LightRed,
     color.Names.Red,
@@ -85,7 +88,11 @@ export function editor_draw()
     # paint surface
     draw.rect(44, 20, 130, 130, color.Names.BlueGray)
     draw_checkerboard(45, 21, 128, 128, 128 / edit_size / 2)
-    draw.sprite(currentSheet, sprite_x, sprite_y, 45, 21, edit_size, edit_size, 128 / edit_size, 128 / edit_size)
+    if (temporaryToolX != -1) then
+        draw.sprite(temporaryTexture, sprite_x, sprite_y, 45, 21, edit_size, edit_size, 128 / edit_size, 128 / edit_size)
+    else
+        draw.sprite(currentSheet, sprite_x, sprite_y, 45, 21, edit_size, edit_size, 128 / edit_size, 128 / edit_size)
+    end
 
     # colors
     var width = 10
@@ -166,6 +173,7 @@ export function editor_draw()
     btn_paintpixels.draw(mode == Modes.Paintpixels)
     btn_line.draw(mode == Modes.Line)
     btn_circle.draw(mode == Modes.Circle)
+    btn_rect.draw(mode == Modes.Rect)
     btn_select.draw(mode == Modes.Select)
     btn_picker.draw(mode == Modes.Picker)
 
@@ -176,6 +184,7 @@ export function editor_draw()
         btn_paintpixels.hitTest(true, mouse_x, mouse_y)
         btn_line.hitTest(true, mouse_x, mouse_y)
         btn_circle.hitTest(true, mouse_x, mouse_y)
+        btn_rect.hitTest(true, mouse_x, mouse_y)
         btn_select.hitTest(true, mouse_x, mouse_y)
         btn_picker.hitTest(true, mouse_x, mouse_y)
 
@@ -195,10 +204,14 @@ export function editor_update()
         leftButtonDown = true
         # edit surface
         if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
-        # minimap 187, 21
+        # minimap
         if (mouse_x >= 187 && mouse_x < 187 + 64 && mouse_y >= 21 && mouse_y < 21 + 64) then
             sprite_x = math.max(0, math.min(64 - edit_size, (mouse_x - 187) - edit_size / 2));
             sprite_y = math.max(0, math.min(64 - edit_size, (mouse_y - 21) - edit_size / 2));
+            if input.key(input.Keys.Shift) then
+                sprite_x = ((sprite_x + 4) / 8) * 8
+                sprite_y = ((sprite_y + 4) / 8) * 8
+            end
         end
     else if leftButtonDown then
         leftButtonDown = false
@@ -208,6 +221,7 @@ export function editor_update()
         if btn_paintpixels.hitTest(false, mouse_x, mouse_y) then mode = Modes.Paintpixels ;
         if btn_line.hitTest(false, mouse_x, mouse_y) then mode = Modes.Line ;
         if btn_circle.hitTest(false, mouse_x, mouse_y) then mode = Modes.Circle ;
+        if btn_rect.hitTest(false, mouse_x, mouse_y) then mode = Modes.Rect ;
         if btn_select.hitTest(false, mouse_x, mouse_y) then mode = Modes.Select ;
         if btn_picker.hitTest(false, mouse_x, mouse_y) then mode = Modes.Picker ;
 
@@ -292,12 +306,13 @@ end
 
 
 var btn_pen = new ToolButton(7, 21, 14, 14, "P")
-var btn_paintbucket = new ToolButton(23, 21, 14, 14, "P")
-var btn_paintpixels = new ToolButton(7, 37, 14, 14, "P")
-var btn_line = new ToolButton(23, 37, 14, 14, "P")
-var btn_circle = new ToolButton(7, 53, 14, 14, "P")
-var btn_select = new ToolButton(23, 53, 14, 14, "P")
-var btn_picker = new ToolButton(7, 69, 14, 14, "P")
+var btn_paintbucket = new ToolButton(23, 21, 14, 14, "Pb")
+var btn_paintpixels = new ToolButton(7, 37, 14, 14, "Pp")
+var btn_line = new ToolButton(23, 37, 14, 14, "L")
+var btn_circle = new ToolButton(7, 53, 14, 14, "C")
+var btn_rect = new ToolButton(23, 53, 14, 14, "R")
+var btn_select = new ToolButton(7, 69, 14, 14, "S")
+var btn_picker = new ToolButton(23, 69, 14, 14, "Pi")
 
 var btn_nextSheet = new ToolButton(242, 85, 9, 9, "+")
 var btn_prevSheet = new ToolButton(232, 85, 9, 9, "-")
@@ -305,13 +320,107 @@ var btn_prevSheet = new ToolButton(232, 85, 9, 9, "-")
 var btn_zoomIn = new ToolButton(242, 115, 9, 9, "+")
 var btn_zoomOut = new ToolButton(232, 115, 9, 9, "-")
 
-function toolUp(primary, mouse_x, mouse_y)
+function toolDown(primary, mouse_x, mouse_y)
+    if mode == Modes.Pen then
+        draw.renderToTexture(currentSheet)
+        if primary then draw.pixel(mouse_x, mouse_y, currentPrimaryColor)
+        else draw.pixel(mouse_x, mouse_y, currentSecondaryColor)
+        draw.renderToTexture()
+    else if mode == Modes.Paintbucket then
+        # do nothing in tooldown
+    else if mode == Modes.Paintpixels then
+        # do nothing in tooldown
+    else if mode == Modes.Line || mode == Modes.Circle || mode == Modes.Rect then
+        if temporaryToolX == -1 then
+            temporaryToolX = mouse_x ; temporaryToolY = mouse_y
+        end
+        draw.renderToTexture(temporaryTexture)
+        draw.cls(color.Names.Transparent)
+        draw.sprite(currentSheet, 0, 0, 0, 0, 64, 64)
+        var c = currentPrimaryColor
+        if !primary then c = currentSecondaryColor
 
+        if mode == Modes.Line then
+            draw.line(temporaryToolX, temporaryToolY, mouse_x, mouse_y, c)
+        else if mode == Modes.Circle then
+            var delta = math.max(math.abs(temporaryToolX - mouse_x), math.abs(temporaryToolY - mouse_y)) + 1
+            draw.circle(temporaryToolX, temporaryToolY, delta, c)
+        else if mode == Modes.Rect then
+            var w = mouse_x - temporaryToolX + 1
+            var h = mouse_y - temporaryToolY + 1
+            draw.rect(temporaryToolX, temporaryToolY, w, h, c)
+        end
+
+        draw.renderToTexture()
+    else if mode == Modes.Select then
+        # do nothing in tooldown
+    else if mode == Modes.Picker then
+        draw.renderToTexture(currentSheet)
+        if primary then currentPrimaryColor = draw.getPixel(mouse_x, mouse_y)
+        else currentSecondaryColor = draw.getPixel(mouse_x, mouse_y)
+        draw.renderToTexture()
+    end
 end
 
-function toolDown(primary, mouse_x, mouse_y)
-    draw.renderToTexture(currentSheet)
-    if primary then draw.pixel(mouse_x, mouse_y, currentPrimaryColor)
-    else draw.pixel(mouse_x, mouse_y, currentSecondaryColor)
-    draw.renderToTexture()
+function paintbucket(color_old, color_new, x, y)
+    if draw.getPixel(x, y) == color_new then return ;
+    if draw.getPixel(x, y) != color_old then return ;
+    var q = []
+    draw.pixel(x, y, color_new)
+    q[] = [x, y]
+
+    while q.length() > 0 do
+        var n = q[q.length() - 1]
+        q.deleteAt(q.length() - 1)
+        # east
+        if n[0] < 63 && draw.getPixel(n[0] + 1, n[1]) == color_old then
+            draw.pixel(n[0] + 1, n[1], color_new)
+            q[] = [n[0] + 1, n[1]]
+        end
+        # south
+        if n[1] < 63 && draw.getPixel(n[0], n[1] + 1) == color_old then
+            draw.pixel(n[0], n[1] + 1, color_new)
+            q[] = [n[0], n[1] + 1]
+        end
+        # west
+        if n[0] > 0 && draw.getPixel(n[0] - 1, n[1]) == color_old then
+            draw.pixel(n[0] - 1, n[1], color_new)
+            q[] = [n[0] - 1, n[1]]
+        end
+        # north
+        if n[1] > 0 && draw.getPixel(n[0], n[1] - 1) == color_old then
+            draw.pixel(n[0], n[1] - 1, color_new)
+            q[] = [n[0], n[1] - 1]
+        end
+    end
+end
+
+function toolUp(primary, mouse_x, mouse_y)
+    if mode == Modes.Line || mode == Modes.Circle || mode == Modes.Rect then
+        draw.renderToTexture(currentSheet)
+        var c = currentPrimaryColor
+        if !primary then c = currentSecondaryColor
+
+        if mode == Modes.Line then
+            draw.line(temporaryToolX, temporaryToolY, mouse_x, mouse_y, c)
+        else if mode == Modes.Circle then
+            var delta = math.max(math.abs(temporaryToolX - mouse_x), math.abs(temporaryToolY - mouse_y)) + 1
+            draw.circle(temporaryToolX, temporaryToolY, delta, c)
+        else if mode == Modes.Rect then
+            var w = mouse_x - temporaryToolX + 1
+            var h = mouse_y - temporaryToolY + 1
+            draw.rect(temporaryToolX, temporaryToolY, w, h, c)
+        end
+
+        draw.renderToTexture()
+        temporaryToolX = temporaryToolY = -1
+
+    end
+    if mode == Modes.Paintbucket then
+        var ci = currentPrimaryColor
+        if !primary then c = currentSecondaryColor
+        draw.renderToTexture(currentSheet)
+        paintbucket(draw.getPixel(mouse_x, mouse_y), ci, mouse_x, mouse_y)
+        draw.renderToTexture()
+    end
 end
