@@ -151,6 +151,10 @@ export function editor_draw()
     draw.clip(0, 183, 80, 9)
     draw.text(2, 185, current_filename, colors.LightGray)
     draw.clip()
+    draw.setFont("EditorIcons")
+    draw.text(70, 185, "^", colors.LightGray)
+    draw.setFont("5px")
+
     draw.fillRect(80, 183, 1, 9, colors.DarkGray)
 
     var posTxt = (cursor_y + 1) + ":" + cursor_x
@@ -283,25 +287,25 @@ function autoIndentReturn()
         end
     end
 
-    if lines[cursor_y - 1].trim().startsWith("function ") && lines[cursor_y - 1].trim().endsWith(")") then
-        indentation += tabSize
-    end
-
-    if lines[cursor_y - 1].trim().startsWith("if ") && lines[cursor_y - 1].trim().endsWith(" then") then
-        indentation += tabSize
-    end
-
-    if lines[cursor_y - 1].trim().startsWith("for ") && lines[cursor_y - 1].trim().endsWith(" do") then
-        indentation += tabSize
-    end
-
-    if lines[cursor_y - 1].trim().startsWith("while ") && lines[cursor_y - 1].trim().endsWith(" do") then
-        indentation += tabSize
-    end
-
-    if lines[cursor_y - 1].trim().startsWith("class ") then
-        indentation += tabSize
-    end
+#    if lines[cursor_y - 1].trim().startsWith("function ") && lines[cursor_y - 1].trim().endsWith(")") then
+#        indentation += tabSize
+#    end
+#
+#    if lines[cursor_y - 1].trim().startsWith("if ") && lines[cursor_y - 1].trim().endsWith(" then") then
+#        indentation += tabSize
+#    end
+#
+#    if lines[cursor_y - 1].trim().startsWith("for ") && lines[cursor_y - 1].trim().endsWith(" do") then
+#        indentation += tabSize
+#    end
+#
+#    if lines[cursor_y - 1].trim().startsWith("while ") && lines[cursor_y - 1].trim().endsWith(" do") then
+#        indentation += tabSize
+#    end
+#
+#    if lines[cursor_y - 1].trim().startsWith("class ") then
+#        indentation += tabSize
+#    end
 
     if indentation > 0 then
         lines[cursor_y] = " ".repeat(indentation) + lines[cursor_y]

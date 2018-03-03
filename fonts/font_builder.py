@@ -13,9 +13,17 @@ def process(source_file):
     output = open(name + ".fnt.h", "w")
     output.write("#include \"../font.h\"\n\n")
 
-    width = int(input.readline().strip())
+    width = input.readline().strip()
     height = int(input.readline().strip())
     space_width = int(input.readline().strip())
+
+    constant_width = False
+
+    if width.endswith("!"):
+        width = int(width[0:-1])
+        constant_width = True
+    else:
+        width = int(width)
 
     output.write("fs_font_t " + name + " = (fs_font_t) {\n")
     output.write("    .name = \"" + name + "\",\n")
@@ -53,6 +61,8 @@ def process(source_file):
             line += 1
             if len(rows[i]) > charwidth:
                 charwidth = len(rows[i])
+
+        if constant_width: charwidth = width
 
         # print "char " + char + " is width " + str(charwidth)
         if char == "'":

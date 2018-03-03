@@ -101,16 +101,16 @@ var sprite_y = 0
 var select_x1 = empty, select_x2, select_y1, select_y2
 var selecting = false
 
-var btn_pen = new ToolButton(7, 21, 14, 14, "P")
-var btn_paintbucket = new ToolButton(23, 21, 14, 14, "Pb")
-var btn_paintpixels = new ToolButton(7, 37, 14, 14, "Pp")
-var btn_line = new ToolButton(23, 37, 14, 14, "L")
-var btn_circle = new ToolButton(7, 53, 14, 14, "C")
-var btn_rect = new ToolButton(23, 53, 14, 14, "R")
-var btn_select = new ToolButton(7, 69, 14, 14, "S")
-var btn_picker = new ToolButton(23, 69, 14, 14, "Pi")
+var btn_pen = new ToolButton(7, 21, 14, 14, "A", "EditorIcons")
+var btn_paintbucket = new ToolButton(23, 21, 14, 14, "B", "EditorIcons")
+var btn_paintpixels = new ToolButton(7, 37, 14, 14, "C", "EditorIcons")
+var btn_line = new ToolButton(23, 37, 14, 14, "D", "EditorIcons")
+var btn_circle = new ToolButton(7, 53, 14, 14, "E", "EditorIcons")
+var btn_rect = new ToolButton(23, 53, 14, 14, "F", "EditorIcons")
+var btn_select = new ToolButton(7, 69, 14, 14, "G", "EditorIcons")
+var btn_picker = new ToolButton(23, 69, 14, 14, "H", "EditorIcons")
 
-var btn_changeSheet = new ToolButton(187, 85, 64, 9, current_filename)
+var btn_changeSheet = new ToolButton(187, 85, 64, 9, current_filename + "  ")
 
 var btn_zoomIn = new ToolButton(242, 115, 9, 9, "+")
 var btn_zoomOut = new ToolButton(232, 115, 9, 9, "-")
@@ -196,6 +196,9 @@ export function editor_draw()
     end
 
     btn_changeSheet.draw()
+    draw.setFont("EditorIcons")
+    draw.text(243, 86, ">", color.Names.LightGray)
+    draw.setFont("5px")
 
     draw.rect(186 + sprite_x, 20 + sprite_y, edit_size + 2, edit_size + 2, color.Names.Black)
     draw.rect(185 + sprite_x, 19 + sprite_y, edit_size + 4, edit_size + 4, color.Names.White)
@@ -473,7 +476,7 @@ function openFilename(filename)
 
     debug_print("open file: " + filename + "\n")
     current_filename = filename
-    btn_changeSheet.caption = current_filename
+    btn_changeSheet.caption = current_filename + "  "
 
     var path = editor_state.getPath() + "/" + current_filename + ".sprite"
     if fs.exists(path) then
@@ -509,7 +512,7 @@ function renameFilename(old, new)
         fs.rename(path + old + ".sprite", path + new + ".sprite")
         if current_filename == old then
             current_filename = new
-            btn_changeSheet.caption = new
+            btn_changeSheet.caption = new + "  "
         end
     end
 end
@@ -518,9 +521,11 @@ class ToolButton
     var caption = ""
     var x, y, w, h
     var bgUp, bgDown
+    var font
 
-    function new(x, y, w, h, caption = "", bgUp = color.Names.BlueGray, bgDown = color.Names.Gray)
+    function new(x, y, w, h, caption = "", font = "7px", bgUp = color.Names.BlueGray, bgDown = color.Names.Gray)
         this.caption = caption
+        this.font = font
         this.x = x ; this.y = y ; this.w = w ; this.h = h
         this.bgUp = bgUp ; this.bgDown = bgDown
     end
@@ -531,7 +536,7 @@ class ToolButton
             draw.setFont("5px")
             offset = 2
         else
-            draw.setFont("7px")
+            draw.setFont(this.font)
         end
         var text_x = this.x + this.w / 2 - draw.textWidth(this.caption) / 2
         if down then
