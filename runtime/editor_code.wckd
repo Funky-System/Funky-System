@@ -700,6 +700,7 @@ function openFilename(filename)
 end
 
 function save()
+    last_save = timer.getTicks()
     var path = editor_state.getPath()
     if path == empty then return
 

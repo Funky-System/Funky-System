@@ -3,6 +3,11 @@ import draw
 import color
 import input
 import timer
+import fs
+
+import editor_state
+import editor_gfx_file_list
+import editor_msgbox
 
 function debug_print(str)
     asm "
@@ -46,6 +51,11 @@ var currentSecondaryColor = color.Names.Transparent
 
 var temporaryTexture = draw.createTexture()
 var temporaryToolX = -1, temporaryToolY = -1
+
+var current_filename = "sheet1"
+
+var fileList = empty
+var msgbox = empty
 
 var colors = [
     color.Names.LightRed,
@@ -100,7 +110,7 @@ var btn_rect = new ToolButton(23, 53, 14, 14, "R")
 var btn_select = new ToolButton(7, 69, 14, 14, "S")
 var btn_picker = new ToolButton(23, 69, 14, 14, "Pi")
 
-var btn_changeSheet = new ToolButton(187, 85, 64, 9, "001")
+var btn_changeSheet = new ToolButton(187, 85, 64, 9, current_filename)
 
 var btn_zoomIn = new ToolButton(242, 115, 9, 9, "+")
 var btn_zoomOut = new ToolButton(232, 115, 9, 9, "-")
@@ -127,7 +137,6 @@ export function editor_draw()
 
     # colors
     var width = 10
-    #draw.fillRect(2, 151, 11 * width + 2, 3 * width + 2, color.Names.Black)
     for c in 0..33 do
         var row = c / 11
         var col = c % 11
@@ -175,7 +184,6 @@ export function editor_draw()
     draw.rect(33, 158, 18, 18, color.Names.White)
 
     # sprite sheet
-    #draw.fillRect(187, 21, 64, 64, color.Names.Black)
     draw_checkerboard(187, 21, 64, 64, 4)
     draw.sprite(currentSheet, 0, 0, 187, 21, 64, 64, 1, 1)
     if select_x1 != empty then
@@ -208,7 +216,6 @@ export function editor_draw()
     draw.textMono(190, 140, sprite_x + "," + sprite_y, color.Names.LightGray)
     draw.clip()
 
-
     btn_pen.draw(mode == Modes.Pen)
     btn_paintbucket.draw(mode == Modes.Paintbucket)
     btn_paintpixels.draw(mode == Modes.Paintpixels)
@@ -217,6 +224,17 @@ export function editor_draw()
     btn_rect.draw(mode == Modes.Rect)
     btn_select.draw(mode == Modes.Select)
     btn_picker.draw(mode == Modes.Picker)
+
+
+    if fileList != empty then
+        fileList.draw()
+        return
+    end
+
+    if msgbox != empty then
+        msgbox.draw()
+        return
+    end
 
     var mouse_x = input.mouseX(), mouse_y = input.mouseY()
     if input.leftButtonPressed() then
@@ -233,7 +251,6 @@ export function editor_draw()
         btn_zoomIn.hitTest(true, mouse_x, mouse_y)
         btn_zoomOut.hitTest(true, mouse_x, mouse_y)
     end
-
 end
 
 function drawSelection(x, y, w, h, s, spr_x, spr_y)
@@ -293,16 +310,62 @@ function dottedLineVertical(y1, y2, x)
     end
 end
 
+function userClicked(x, y, w, h)
+    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+    if leftButtonDownOnX >= x && leftButtonDownOnX < x + w && mouse_x >= x && mouse_x < x + w then
+        if leftButtonDownOnY >= y && leftButtonDownOnY < y + h && mouse_y >= y && mouse_y < y + h then
+            return true
+        end
+    end
+    return false
+end
+
 var leftButtonDown = false
+var leftButtonDownOnX = -1, leftButtonDownOnY = -1
 var rightButtonDown = false
+var rightButtonDownOnX = -1, rightButtonDownOnY = -1
 export function editor_update()
+    if fileList != empty then
+        fileList.update()
+        return
+    end
+
+    if msgbox != empty then
+        msgbox.update()
+        return
+    end
+
+    if input.keyPress(input.Keys.O) && input.key(input.Keys.Ctrl) then openFileList()
+
     var mouse_x = input.mouseX(), mouse_y = input.mouseY()
     if input.leftButtonPressed() then
-        leftButtonDown = true
+        if !leftButtonDown then
+            leftButtonDownOnX = mouse_x
+            leftButtonDownOnY = mouse_y
+            leftButtonDown = true
+        end
+
         # edit surface
-        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) && _
+           (leftButtonDownOnX >= 45 && leftButtonDownOnX < 45 + 128 && leftButtonDownOnY >= 21 && leftButtonDownOnY < 21 + 128) then
+            if input.key(input.Keys.Space) then
+                # pan around
+                if pan_move_mouse_x == empty then
+                    pan_move_mouse_x = mouse_x
+                    pan_move_mouse_y = mouse_y
+                    pan_move_x = sprite_x
+                    pan_move_y = sprite_y
+                end
+                sprite_x = math.clamp(pan_move_x - (mouse_x - pan_move_mouse_x) / 6, 0, 64 - edit_size)
+                sprite_y = math.clamp(pan_move_y - (mouse_y - pan_move_mouse_y) / 6, 0, 64 - edit_size)
+                return
+            else
+                pan_move_mouse_x = empty
+                toolDown(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y)
+            end
+        end
         # minimap
-        if (mouse_x >= 187 && mouse_x < 187 + 64 && mouse_y >= 21 && mouse_y < 21 + 64) then
+        if (mouse_x >= 187 && mouse_x < 187 + 64 && mouse_y >= 21 && mouse_y < 21 + 64) && (leftButtonDownOnX >= 187 && leftButtonDownOnX < 187 + 64 && leftButtonDownOnY >= 21 && leftButtonDownOnY < 21 + 64) then
             sprite_x = math.max(0, math.min(64 - edit_size, (mouse_x - 187) - edit_size / 2))
             sprite_y = math.max(0, math.min(64 - edit_size, (mouse_y - 21) - edit_size / 2))
             if input.key(input.Keys.Shift) then
@@ -312,7 +375,16 @@ export function editor_update()
         end
     else if leftButtonDown then
         leftButtonDown = false
-        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolUp(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+
+        if userClicked(33, 158, 26, 26) then
+            var tmpc = currentPrimaryColor
+            currentPrimaryColor = currentSecondaryColor
+            currentSecondaryColor = tmpc
+        end
+
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) && (leftButtonDownOnX >= 45 && leftButtonDownOnX < 45 + 128 && leftButtonDownOnY >= 21 && leftButtonDownOnY < 21 + 128) then
+            toolUp(true, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y)
+        end
 
         var oldMode = mode
 
@@ -341,17 +413,29 @@ export function editor_update()
             sprite_x = math.max(0, math.min(64 - edit_size, sprite_x - edit_size / 4))
             sprite_y = math.max(0, math.min(64 - edit_size, sprite_y - edit_size / 4))
         end
+
+        if btn_changeSheet.hitTest(false, mouse_x, mouse_y) then
+            openFileList()
+        end
     end
 
     if input.rightButtonPressed() then
-        rightButtonDown = true
-        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolDown(false, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        if !rightButtonDown then
+            rightButtonDownOnX = mouse_x
+            rightButtonDownOnY = mouse_y
+            rightButtonDown = true
+        end
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) && (rightButtonDownOnX >= 45 && rightButtonDownOnX < 45 + 128 && rightButtonDownOnY >= 21 && rightButtonDownOnY < 21 + 128) then
+            toolDown(false, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y)
+        end
     else if rightButtonDown then
         rightButtonDown = false
-        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) then toolUp(false, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y) ;
+        if (mouse_x >= 45 && mouse_x < 45 + 128 && mouse_y >= 21 && mouse_y < 21 + 128) && (rightButtonDownOnX >= 45 && rightButtonDownOnX < 45 + 128 && rightButtonDownOnY >= 21 && rightButtonDownOnY < 21 + 128) then
+            toolUp(false, (mouse_x - 45) / (128 / edit_size) + sprite_x, (mouse_y - 21) / (128 / edit_size) + sprite_y)
+        end
     end
 
-    if input.leftButtonPressed() || input.rightButtonPressed() then
+    if (input.leftButtonPressed() || input.rightButtonPressed()) && (leftButtonDownOnX >= 63 && leftButtonDownOnX < 173 && leftButtonDownOnY >= 156 && leftButtonDownOnY < 186) || (rightButtonDownOnX >= 63 && rightButtonDownOnX < 173 && rightButtonDownOnY >= 156 && rightButtonDownOnY < 186) then
         for ci in 0..33 do
             var ro = ci / 11
             var co = ci % 11
@@ -360,6 +444,72 @@ export function editor_update()
                 if input.leftButtonPressed() then currentPrimaryColor = colors[ci]
                 if input.rightButtonPressed() then currentSecondaryColor = colors[ci]
             end
+        end
+    end
+end
+
+function openFileList()
+    save()
+
+    var files = []
+    for f in fs.dir(editor_state.getPath()) do
+        if f.toLowerCase().endsWith(".sprite") then
+            files[] = f[0:-8]
+        end
+    end
+
+    #files = [ "asdf", "SDf", "dfr", "test1", "asdf", "SDf", "dfr", "test1", "asdf", "SDf", "dfr", "test1", "asdf", "SDf", "dfr", "test1", "asdf", "SDf", "dfr", "test1", "asdf", "SDf", "dfr", "test1", "asdf", "SDf", "dfr", "test1" ]
+
+    fileList = new editor_gfx_file_list.FileList(files, openFilename, renameFilename, current_filename)
+end
+
+function openFilename(filename)
+    if (filename == empty) then
+        fileList = empty
+        return
+    end
+
+    save()
+
+    debug_print("open file: " + filename + "\n")
+    current_filename = filename
+    btn_changeSheet.caption = current_filename
+
+    var path = editor_state.getPath() + "/" + current_filename + ".sprite"
+    if fs.exists(path) then
+        currentSheet = draw.deserializeTexture(fs.readString(path))
+    else
+        currentSheet = draw.createTexture()
+        save()
+    end
+
+    fileList = empty
+end
+
+function msgbox_dismiss()
+    msgbox = empty
+end
+
+function renameFilename(old, new)
+    if (old == empty || new == empty) then
+        fileList = empty
+        return
+    end
+
+    save()
+
+    debug_print("rename file: " + old + " -> " + new + "\n")
+
+    fileList = empty
+
+    var path = editor_state.getPath() + "/"
+    if fs.exists(path + new + ".sprite") then
+        msgbox = new editor_msgbox.Msgbox(new + " already exists", msgbox_dismiss, "OK")
+    else
+        fs.rename(path + old + ".sprite", path + new + ".sprite")
+        if current_filename == old then
+            current_filename = new
+            btn_changeSheet.caption = new
         end
     end
 end
@@ -395,8 +545,8 @@ class ToolButton
     end
 
     function hitTest(down, x, y)
-        if x >= this.x && x <= this.x + this.w then
-            if y >= this.y && y <= this.y + this.h then
+        if x >= this.x && x <= this.x + this.w && leftButtonDownOnX >= this.x && leftButtonDownOnX <= this.x + this.w then
+            if y >= this.y && y <= this.y + this.h && leftButtonDownOnY >= this.y && leftButtonDownOnY <= this.y + this.h then
                 if down then
                     this.draw(true)
                 else
@@ -415,6 +565,11 @@ var select_move_x1 = -1
 var select_move_y1 = -1
 var select_move_x2 = -1
 var select_move_y2 = -1
+
+var pan_move_mouse_x = empty
+var pan_move_mouse_y = -1
+var pan_move_x = -1
+var pan_move_y = -1
 
 function toolDown(primary, mouse_x, mouse_y)
     if mode == Modes.Pen then
@@ -513,6 +668,8 @@ function toolDown(primary, mouse_x, mouse_y)
 end
 
 function toolUp(primary, mouse_x, mouse_y)
+    pan_move_mouse_x = empty
+
     if mode == Modes.Line || mode == Modes.Circle || mode == Modes.Rect then
         draw.renderToTexture(currentSheet)
         var c = currentPrimaryColor
@@ -618,4 +775,13 @@ function paintbucket(color_old, color_new, x, y)
             q[] = [n[0], n[1] - 1]
         end
     end
+end
+
+var last_save = 0
+function save()
+    last_save = timer.getTicks()
+    var path = editor_state.getPath()
+    if path == empty then return
+
+    fs.writeString(path + "/" + current_filename + ".sprite", draw.serializeTexture(currentSheet))
 end

@@ -123,7 +123,7 @@ static void fillRect(CPU_State *state) {
 
 static void setColor(CPU_State *state) {
     struct color_t *color = &colors[STACK_VALUE(state, -0)->int_value];
-    SDL_SetRenderDrawColor(display->renderer, color->r, color->g, color->b, 255);
+    SDL_SetRenderDrawColor(display->renderer, color->r, color->g, color->b, color->a);
 }
 
 static void cls(CPU_State *state) {
@@ -368,17 +368,21 @@ static void clip(CPU_State *state) {
 static SDL_Texture** textures = NULL;
 static vm_type_t numTextures = 0;
 
-static void createTexture(CPU_State *state) {
+static unsigned int _createTexture() {
     if (textures == NULL) {
         textures = malloc(sizeof(SDL_Texture*) * numTextures);
     }
 
-    numTextures++;
-    textures = realloc(textures, sizeof(SDL_Texture*) * numTextures);
+    textures = realloc(textures, sizeof(SDL_Texture*) * (numTextures + 1));
 
-    textures[numTextures - 1] = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 64, 64);
-    SDL_SetTextureBlendMode(textures[numTextures - 1], SDL_BLENDMODE_BLEND);
+    textures[numTextures] = SDL_CreateTexture(display->renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 64, 64);
+    SDL_SetTextureBlendMode(textures[numTextures], SDL_BLENDMODE_BLEND);
 
+    return numTextures++;
+}
+
+static void createTexture(CPU_State *state) {
+    _createTexture();
     VM_RETURN_UINT(state, numTextures - 1);
 }
 
@@ -477,6 +481,81 @@ static void sprite(CPU_State *state) {
     SDL_RenderCopy(display->renderer, sheet, &srcrect, &dstrect);
 }
 
+Uint32 get_pixel32(SDL_Surface *surface, int x, int y) {
+    //Convert pixels to 32 bits
+    Uint32 *pixels = (Uint32*)surface->pixels;
+
+    return pixels[(y*surface->w) + x];
+}
+
+static void serializeTexture(CPU_State *state) {
+    SDL_Texture* sheet = textures[STACK_VALUE(state, 0)->uint_value];
+    char *serialize = malloc(64 * 64 + 1);
+
+    SDL_Surface *surface;
+    Uint32 rmask, gmask, bmask, amask;
+
+    /* SDL interprets each pixel as a 32-bit number, so our masks must depend
+       on the endianness (byte order) of the machine */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+        amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+
+    surface = SDL_CreateRGBSurface(0, 64, 64, 32, rmask, gmask, bmask, amask);
+    if (surface == NULL) {
+        SDL_Log("SDL_CreateRGBSurface() failed: %s", SDL_GetError());
+        exit(1);
+    }
+    SDL_SetRenderTarget(display->renderer, sheet);
+    SDL_RenderReadPixels(display->renderer, NULL, SDL_PIXELFORMAT_BGRA8888, surface->pixels, surface->pitch);
+    SDL_SetRenderTarget(display->renderer, NULL);
+
+    for (int x = 0; x < 64; x++) for (int y = 0; y < 64; y++) {
+        Uint8 pixel[4];
+        Uint32 pixelval = get_pixel32(surface, x, y);
+        memcpy(pixel, &pixelval, 4);
+        for (char i = 0; i < 33; i++) {
+            if (colors[i].r == pixel[1] && colors[i].g == pixel[2] && colors[i].b == pixel[3] && colors[i].a == pixel[0]) {
+                serialize[y * 64 + x] = (char)(56 + i);
+            }
+        }
+    }
+
+    vm_value_t val = vm_create_string(state, serialize);
+    free(serialize);
+
+    VM_RETURN(state, val);
+}
+
+static void deserializeTexture(CPU_State *state) {
+    const char *contents = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -0));
+
+    vm_type_t index = _createTexture();
+    size_t len = strlen(contents);
+
+    SDL_SetRenderTarget(display->renderer, textures[index]);
+
+    SDL_SetRenderDrawBlendMode(display->renderer, SDL_BLENDMODE_NONE);
+    for (int i = 0; i < len; i++) {
+        struct color_t *color = &colors[contents[i] - 56];
+        SDL_SetRenderDrawColor(display->renderer, color->r, color->g, color->b, color->a);
+        SDL_RenderDrawPoint(display->renderer, i % 64, i / 64);
+    }
+    SDL_SetRenderDrawBlendMode(display->renderer, SDL_BLENDMODE_BLEND);
+
+    SDL_SetRenderTarget(display->renderer, NULL);
+
+    VM_RETURN_UINT(state, index);
+}
+
 void register_bindings_draw(CPU_State *state) {
     display = get_display();
     register_syscall(state, "camera", camera);
@@ -500,4 +579,6 @@ void register_bindings_draw(CPU_State *state) {
     register_syscall(state, "renderToTexture", renderToTexture);
     register_syscall(state, "spriteEx", spriteEx);
     register_syscall(state, "sprite", sprite);
+    register_syscall(state, "serializeTexture", serializeTexture);
+    register_syscall(state, "deserializeTexture", deserializeTexture);
 }

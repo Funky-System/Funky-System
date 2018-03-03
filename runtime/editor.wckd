@@ -58,8 +58,8 @@ class BarButton
     end
 
     function hitTest(down, x, y)
-        if x >= this.x && x <= this.x + this.w then
-            if y >= this.y && y <= this.y + this.h then
+        if x >= this.x && x <= this.x + this.w && leftButtonDownOnX >= this.x && leftButtonDownOnX <= this.x + this.w then
+            if y >= this.y && y <= this.y + this.h  && leftButtonDownOnY >= this.y && leftButtonDownOnY <= this.y + this.h then
                 if down then
                     this.draw(true)
                 else
@@ -80,6 +80,7 @@ var sfxButton = new BarButton(68, 2, 20, 12, "S", color.Names.Gray, color.Names.
 var musicButton = new BarButton(90, 2, 20, 12, "M", color.Names.Gray, color.Names.DarkGray)
 
 var leftButtonDown = false
+var leftButtonDownOnX = -1, leftButtonDownOnY = -1
 
 export function update()
     draw.cls(color.Names.Black)
@@ -101,6 +102,13 @@ export function update()
     mapButton.draw(mode == Modes.Map)
     sfxButton.draw(mode == Modes.Sfx)
     musicButton.draw(mode == Modes.Music)
+
+    var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+    codeButton.hitTest(true, mouse_x, mouse_y)
+    gfxButton.hitTest(true, mouse_x, mouse_y)
+    mapButton.hitTest(true, mouse_x, mouse_y)
+    sfxButton.hitTest(true, mouse_x, mouse_y)
+    musicButton.hitTest(true, mouse_x, mouse_y)
 
     draw.setFont("9px")
     draw.text(256 - 6 - draw.textWidth(editor_state.getProjectName()), 4, editor_state.getProjectName(), color.Names.LightGray)
@@ -137,8 +145,12 @@ function handle_input()
     if mode == Modes.Gfx then editor_gfx.editor_update() ;
 
     var mouse_x = input.mouseX(), mouse_y = input.mouseY()
-        if input.leftButtonPressed() then
-        leftButtonDown = true
+    if input.leftButtonPressed() then
+        if !leftButtonDown then
+            leftButtonDownOnX = mouse_x
+            leftButtonDownOnY = mouse_y
+            leftButtonDown = true
+        end
         codeButton.hitTest(true, mouse_x, mouse_y)
         gfxButton.hitTest(true, mouse_x, mouse_y)
         mapButton.hitTest(true, mouse_x, mouse_y)
@@ -152,7 +164,7 @@ function handle_input()
         if sfxButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Sfx ;
         if musicButton.hitTest(false, mouse_x, mouse_y) then mode = Modes.Music ;
 
-        if mouse_x > 150 && mouse_y <= 16 then
+        if mouse_x > 150 && mouse_y <= 16 && leftButtonDownOnX > 150 && leftButtonDownOnY <= 16 then
             var title = editor_state.getProjectName()
             if title == "(unnamed)" then title = ""
             rename_prompt = new editor_prompt.Prompt("Save project as:", renameProject, title)

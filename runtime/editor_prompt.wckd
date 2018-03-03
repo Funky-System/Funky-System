@@ -40,10 +40,6 @@ export class Prompt
         #draw.rect(50, 66, 156, 1, color.Names.DarkGray)
         #draw.rect(50, 66, 1, 15, color.Names.DarkGray)
 
-        this.confirmBtn.draw()
-        this.cancelBtn.draw()
-
-
         draw.clip(51, 67, 154, 13)
         draw.textMono(53 - this.scroll_x, 69, this.input, color.Names.Black)
 
@@ -53,6 +49,15 @@ export class Prompt
         end
 
         draw.clip()
+
+        if input.leftButtonPressed() then
+            var mouse_x = input.mouseX(), mouse_y = input.mouseY()
+            if this.confirmBtn != empty then this.confirmBtn.hitTest(mouse_x, mouse_y)
+            if this.cancelBtn != empty then this.cancelBtn.hitTest(mouse_x, mouse_y)
+        else
+            if this.confirmBtn != empty then this.confirmBtn.draw()
+            if this.cancelBtn != empty then this.cancelBtn.draw()
+        end
 
     end
 
@@ -232,10 +237,9 @@ class Button
             if y >= this.y && y <= this.y + this.h then
                 this.draw(true)
                 return true
-            else
-                this.draw(false)
-                return false
             end
         end
+        this.draw(false)
+        return false
     end
 end
