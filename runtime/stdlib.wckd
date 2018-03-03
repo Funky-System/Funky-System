@@ -45,7 +45,7 @@ end
 (prototypeof array).contains = arrayContains
 function arrayContains(val)
     for e in this.value do
-        if e == val then return true;
+        if e == val then return true
     end
     return false
 end
@@ -91,7 +91,7 @@ function stringToLowerCase()
     "
     for i in 0..copy.length() do
         if copy[i] >= 65 && copy[i] <= 90 then
-            copy[i] += 32;
+            copy[i] += 32
         end
     end
     return copy
@@ -185,7 +185,7 @@ function stringIsNumeric()
             # yay digit!
         else if this.value[i] == '.' then
             # period
-            if foundPeriod then return false;
+            if foundPeriod then return false
             foundPeriod = true
         else if i == 0 && (this.value[i] == '+' || this.value[i] == '-') && this.length() > 1 then
             # prefix unary
