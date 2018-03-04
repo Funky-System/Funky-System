@@ -13,8 +13,8 @@
 #include "display.h"
 #include "input.h"
 
-static fs_display_t display;
-static fs_input_t input;
+static fs_display_t display = {0};
+static fs_input_t input = {0};
 
 void debug_print(CPU_State *state) {
     const char* str = cstr_pointer_from_vm_value(state, STACK_VALUE(state, 0));
@@ -40,9 +40,8 @@ void pump_events(CPU_State *state) {
     num_frames++;
     current_frame_ticks = SDL_GetTicks();
 
-    input_frame(&input);
+    input_frame(&input, state);
     display_frame(&display);
-
 
     #ifndef FUNKY_VM_OS_EMSCRIPTEN
         Uint32 frameTicks = SDL_GetTicks() - prev_ticks;
@@ -75,11 +74,22 @@ void pump_events(CPU_State *state) {
 fs_display_t *get_display() { return &display; }
 fs_input_t *get_input() { return &input; }
 
+#ifdef FUNKY_VM_OS_MACOS
+    #include <sys/stat.h>
+    #include <unistd.h>
+    #include <errno.h>
+    #include <sys/types.h>
+    #include <pwd.h>
+    #include <limits.h>
+
+    const char* getBundleResourcesDir();
+#endif
 
 static void run(void *arg) {
     #ifdef FUNKY_VM_OS_EMSCRIPTEN
     emscripten_cancel_main_loop();
     #endif
+
     display = display_init();
     input = input_init();
 
@@ -98,6 +108,24 @@ int main() {
     memory_init(&memory, main_memory);
 
     cpu_state = cpu_init(&memory);
+
+    #ifdef FUNKY_VM_OS_MACOS
+        module_register_path(&cpu_state, getBundleResourcesDir());
+
+        struct passwd *pw = getpwuid(getuid());
+        const char *homedir = pw->pw_dir;
+        char *funky_dir = malloc(strlen(homedir) + 64);
+        sprintf(funky_dir, "%s/.funky/", homedir);
+
+        int res = mkdir(funky_dir, 0733);
+        if(res != 0 && errno != EEXIST){
+            printf("Oh dear, something went wrong with mkdir()! %s\n", strerror(errno));
+            exit(1);
+        }
+
+        chdir(funky_dir);
+        free(funky_dir);
+#endif
 
     Module module = module_load_name(&cpu_state, "kernel");
     module_register(&cpu_state, module);

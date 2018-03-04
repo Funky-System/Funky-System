@@ -14,6 +14,14 @@ const int SCREEN_HEIGHT = 192;
 static SDL_Cursor *init_system_cursor(const char *image[]);
 static const char *arrow[];
 
+extern void initNativeWindow();
+
+void display_set_scale(fs_display_t* display, int scale) {
+    display->scale = scale;
+    SDL_SetWindowSize(display->window, SCREEN_WIDTH * scale, SCREEN_HEIGHT * scale);
+    SDL_RenderSetScale(display->renderer, scale, scale);
+}
+
 fs_display_t display_init() {
     fs_display_t display = { 0 };
 
@@ -33,6 +41,8 @@ fs_display_t display_init() {
         printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
+    initNativeWindow();
 
     display.renderer = SDL_CreateRenderer(display.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetScale(display.renderer, INITIAL_SCALE, INITIAL_SCALE);

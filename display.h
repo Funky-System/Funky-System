@@ -18,5 +18,6 @@ typedef struct fs_display_t {
 fs_display_t display_init();
 void display_destroy(fs_display_t *display);
 void display_frame(fs_display_t *display);
+void display_set_scale(fs_display_t* display, int scale);
 
 #endif //FUNKY_SYSTEM_DISPLAY_H

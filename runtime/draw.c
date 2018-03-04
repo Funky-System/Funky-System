@@ -8,6 +8,7 @@
 #include "Funky5.fnt.h"
 #include "Funky7.fnt.h"
 #include "Funky9.fnt.h"
+#include "EditorIcons.fnt.h"
 
 static fs_display_t *display = NULL;
 
@@ -345,6 +346,7 @@ static void setFont(CPU_State *state) {
     if (strcmp(name, "7px") == 0) current_font = &Funky7;
     else if (strcmp(name, "5px") == 0) current_font = &Funky5;
     else if (strcmp(name, "9px") == 0) current_font = &Funky9;
+    else if (strcmp(name, "EditorIcons") == 0) current_font = &EditorIcons;
     else {
         fprintf(stderr, "Unknown font: %s\n", name);
     }
