@@ -73,9 +73,23 @@
     var progressElement = document.getElementById('progress');
     var spinnerElement = document.getElementById('spinner');
 
+    setTimeout(function() {
+        FS.syncfs(function() {});
+    }, 3000);
+
     var Module = {
-        preRun: [],
-        postRun: [],
+        preRun: [function() {
+            FS.mkdir('/data');
+            FS.mount(IDBFS, {}, '/data');
+            FS.syncfs(true, function (err) {
+                // handle callback
+            });
+        }],
+        postRun: [function() {
+            FS.syncfs(function (err) {
+                // handle callback
+            });
+        }],
         print: (function() {
             var element = document.getElementById('output');
             if (element) element.value = ''; // clear browser cache

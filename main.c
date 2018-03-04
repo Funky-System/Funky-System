@@ -84,6 +84,9 @@ fs_input_t *get_input() { return &input; }
 
     const char* getBundleResourcesDir();
 #endif
+#ifdef FUNKY_VM_OS_EMSCRIPTEN
+    #include <unistd.h>
+#endif
 
 static void run(void *arg) {
     #ifdef FUNKY_VM_OS_EMSCRIPTEN
@@ -125,7 +128,12 @@ int main() {
 
         chdir(funky_dir);
         free(funky_dir);
-#endif
+    #endif
+
+    #ifdef FUNKY_VM_OS_EMSCRIPTEN
+        module_register_path(&cpu_state, "/");
+        chdir("/data");
+    #endif
 
     Module module = module_load_name(&cpu_state, "kernel");
     module_register(&cpu_state, module);

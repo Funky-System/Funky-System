@@ -8,7 +8,7 @@
 #include <SDL2/SDL.h>
 
 typedef struct fs_input_t {
-
+    int __REMOVE_ME_WHEN_ITEMS_ARE_ADDED__;
 } fs_input_t;
 
 fs_input_t input_init();

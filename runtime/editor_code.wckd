@@ -680,10 +680,12 @@ end
 var current_filename = "main"
 
 function openFilename(filename)
-    if (filename == empty) then
+    if (filename == empty) || filename.trim() == "" then
         filelist = empty
         return
     end
+
+    filename = filename.trim()
 
     save()
 

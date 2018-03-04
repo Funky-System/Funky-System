@@ -15,7 +15,7 @@ do
     wickedc --arch 32 "$file" -o $(basename -s .wckd "$file").funk
 done
 
-emcc -O3 ../../*.c ../../runtime/*.c -DVM_ARCH_BITS=32 -DVM_NATIVE_MALLOC=1 -s USE_SDL=2 -o funky.html \
+emcc -O3 ../../*.c ../../runtime/*.c ../../os/emscripten/*.c -DVM_ARCH_BITS=32 -DVM_NATIVE_MALLOC=1 -s USE_SDL=2 -o funky.html \
     -I. \
     -I../../fonts \
     -I../../include \

@@ -7,7 +7,7 @@ INCLUDE(FindPkgConfig)
 
 set(VM_ARCH_BITS 32)
 set(VM_NATIVE_MALLOC 0)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 
 ## VIRTUAL MACHINE
