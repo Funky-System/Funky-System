@@ -38,7 +38,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
 ## RUNTIME
-add_custom_target(runtime bash ${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh ${CMAKE_CURRENT_SOURCE_DIR}/runtime ${CMAKE_CURRENT_BINARY_DIR} ${VM_ARCH_BITS})
+add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}" ${VM_ARCH_BITS})
 
 
 ## FUNKY
