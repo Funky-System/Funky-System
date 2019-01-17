@@ -1,13 +1,15 @@
+#define _XOPEN_SOURCE 500
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <ftw.h>
 
 #include <funkyvm/cpu.h>
 #include <funkyvm/funkyvm.h>
-#include <ftw.h>
+
 #include "../funky_system.h"
 
 static void fs_rename(CPU_State *state) {
