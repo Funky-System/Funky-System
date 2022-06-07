@@ -3,6 +3,7 @@
 
 #include <funkyvm/funkyvm.h>
 #include <funkyvm/memory.h>
+#include <funkyvm/os.h>
 
 #ifdef FUNKY_VM_OS_EMSCRIPTEN
 #include <emscripten/emscripten.h>
@@ -87,6 +88,9 @@ fs_input_t *get_input() { return &input; }
 #ifdef FUNKY_VM_OS_EMSCRIPTEN
     #include <unistd.h>
 #endif
+#ifdef FUNKY_VM_OS_WINDOWS
+    char* get_executable_path(const char* append);
+#endif
 
 static void run(void *arg) {
     #ifdef FUNKY_VM_OS_EMSCRIPTEN
@@ -94,6 +98,8 @@ static void run(void *arg) {
     #endif
 
     display = display_init();
+    initNativeWindow();
+    
     input = input_init();
 
     vm_type_t ret = cpu_run((CPU_State*)arg);
@@ -133,6 +139,10 @@ int main() {
     #ifdef FUNKY_VM_OS_EMSCRIPTEN
         module_register_path(&cpu_state, "/");
         chdir("/data");
+    #endif
+
+    #ifdef FUNKY_VM_OS_WINDOWS
+        module_register_path(&cpu_state, get_executable_path(""));
     #endif
 
     Module module = module_load_name(&cpu_state, "kernel");

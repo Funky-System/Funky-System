@@ -3,12 +3,10 @@ project(Funky-System C)
 set(CMAKE_C_STANDARD 11)
 
 include(ExternalProject)
-INCLUDE(FindPkgConfig)
 
 set(VM_ARCH_BITS 32)
 set(VM_NATIVE_MALLOC 0)
 set(CMAKE_BUILD_TYPE Release)
-
 
 ## VIRTUAL MACHINE
 ExternalProject_Add(
@@ -26,6 +24,14 @@ add_library(libfunky-vm IMPORTED STATIC GLOBAL)
 add_dependencies(libfunky-vm funky-vm)
 set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/libfunky-vm.a"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
+if (NOT MSVC)
+        set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/libfunky-vm.a"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
+else()
+        set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/${CMAKE_BUILD_TYPE}/funky-vm.lib"
+        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
+endif()
+
 include_directories("${source_dir}/include")
 
 
@@ -38,18 +44,31 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 
 ## RUNTIME
-add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}" ${VM_ARCH_BITS})
+if(MSVC)
+        add_custom_target(runtime cmd /C "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.cmd" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
+else()
+        add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}" ${VM_ARCH_BITS})
+endif()
 
 
 ## FUNKY
 add_definitions(-DVM_ARCH_BITS=${VM_ARCH_BITS})
 add_definitions(-DVM_NATIVE_MALLOC=${VM_NATIVE_MALLOC})
-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
+if (MSVC)
+        set(SDL2_INCLUDE_DIRS "C:\\leeg\\SDL2-2.0.22\\include" CACHE PATH "SDL2 Include Dirs")
+        set(SDL2_LIBRARIES "C:\\leeg\\SDL2-2.0.22\\lib\\x64\\SDL2main.lib" "C:\\leeg\\SDL2-2.0.22\\lib\\x64\\SDL2.lib" CACHE PATH "SDL2 Libraries")
+else()
+        INCLUDE(FindPkgConfig)
+        PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+endif()
 add_executable(funky main.c display.c display.h input.c input.h funky_system.h vm.c vm.h runtime/draw.c font.h runtime/input.c runtime/timer.c runtime/clipboard.c runtime/fs.c)
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
 set_property(SOURCE display.c APPEND PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/*.fnt.h)
 add_dependencies(funky runtime fonts)
-target_link_libraries(funky libfunky-vm m ${SDL2_LIBRARIES})
+target_link_libraries(funky libfunky-vm ${SDL2_LIBRARIES})
+if (NOT MSVC)
+        target_link_libraries(funky m)
+endif()
 
 if(APPLE)
     target_sources(funky PUBLIC os/macos/main.m)
@@ -61,4 +80,10 @@ if(APPLE)
     add_custom_target(bundle cp "${CMAKE_CURRENT_BINARY_DIR}/*.funk" "${CMAKE_CURRENT_BINARY_DIR}/Funky System.app/Contents/Resources/" )
     add_dependencies(bundle_base funky icns)
     add_dependencies(bundle bundle_base)
+endif()
+
+if (WIN32)
+        target_sources(funky PUBLIC os/windows/win32.c)
+        target_link_libraries(funky legacy_stdio_definitions.lib)
+        #set_property(TARGET funky PROPERTY WIN32_EXECUTABLE true)
 endif()

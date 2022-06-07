@@ -3,9 +3,14 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef _MSC_VER
+#include "../compat/dirent.h"
+#include <Windows.h>
+#include <shellapi.h>
+#else
 #include <dirent.h>
 #include <ftw.h>
+#endif
 
 #include <funkyvm/cpu.h>
 #include <funkyvm/funkyvm.h>
@@ -37,17 +42,41 @@ static void fs_dirExists(CPU_State *state) {
 }
 
 static void fs_mkdir(CPU_State *state) {
-    mode_t mode = 0733; // UNIX style permissions
     int error = 0;
     const char *path = cstr_pointer_from_vm_value(state, STACK_VALUE(state, -0));
     #if defined(_WIN32)
         error = _mkdir(path); // can be used on Windows
     #else
+        mode_t mode = 0733; // UNIX style permissions
         error = mkdir(path, mode); // can be used on non-Windows
     #endif
     VM_RETURN_INT(state, error);
 }
 
+#ifdef _MSC_VER
+LONG DeleteDirectoryAndAllSubfolders(LPCWSTR wzDirectory)
+{
+    WCHAR szDir[MAX_PATH+1];  // +1 for the double null terminate
+    SHFILEOPSTRUCTW fos = {0};
+
+    wcscpy(szDir, wzDirectory);
+    int len = lstrlenW(szDir);
+    szDir[len+1] = 0; // double null terminate for SHFileOperation
+
+    // delete the folder and everything inside
+    fos.wFunc = FO_DELETE;
+    fos.pFrom = szDir;
+    fos.fFlags = FOF_NO_UI;
+    return SHFileOperation( &fos );
+}
+
+static int rmrfdir(const char* path) {
+    wchar_t wpath[MAX_PATH+1];
+    mbstowcs(wpath, path, strlen(path)+1);//Plus null
+    DeleteDirectoryAndAllSubfolders(wpath);
+    return 0;
+}
+#else
 static int rmFiles(const char *pathname, const struct stat *sbuf, int type, struct FTW *ftwb)
 {
     if(remove(pathname) < 0)
@@ -62,6 +91,7 @@ static int rmFiles(const char *pathname, const struct stat *sbuf, int type, stru
 static int rmrfdir(const char* path) {
     return nftw(path, rmFiles, 10, FTW_DEPTH|FTW_MOUNT|FTW_PHYS);
 }
+#endif
 
 
 static void fs_rmdir(CPU_State *state) {

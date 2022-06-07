@@ -3,6 +3,7 @@
 //
 
 #include <SDL2/SDL.h>
+#include <stdlib.h>
 
 #include "display.h"
 #include "font.h"
@@ -12,7 +13,7 @@ const int SCREEN_WIDTH = 256;
 const int SCREEN_HEIGHT = 192;
 
 static SDL_Cursor *init_system_cursor(const char *image[]);
-static const char *arrow[];
+static const char *arrow[32];
 
 extern void initNativeWindow();
 
@@ -41,8 +42,6 @@ fs_display_t display_init() {
         printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
-
-    initNativeWindow();
 
     display.renderer = SDL_CreateRenderer(display.window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     SDL_RenderSetScale(display.renderer, INITIAL_SCALE, INITIAL_SCALE);
@@ -74,7 +73,7 @@ void display_frame(fs_display_t *display) {
 }
 
 /* XPM */
-static const char *arrow[] = {
+static const char *arrow[32] = {
         /* width height num_colors chars_per_pixel */
         "    26    26        3            1",
         /* colors */

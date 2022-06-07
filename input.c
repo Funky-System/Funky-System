@@ -37,6 +37,10 @@ void input_frame(fs_input_t *input, CPU_State* state) {
         else if (e.type == SDL_KEYUP) {
             resetKeyPress(e.key.keysym.scancode);
         }
+
+        else if (e.type == SDL_SYSWMEVENT) {
+            platform_handle_event(&e, state);
+        }
     }
 }
 

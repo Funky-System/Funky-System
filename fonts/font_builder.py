@@ -25,7 +25,7 @@ def process(source_file):
     else:
         width = int(width)
 
-    output.write("fs_font_t " + name + " = (fs_font_t) {\n")
+    output.write("fs_font_t " + name + " = {\n")
     output.write("    .name = \"" + name + "\",\n")
     output.write("    .max_width = " + str(width) + ",\n")
     output.write("    .height = " + str(height) + ",\n")
@@ -51,7 +51,7 @@ def process(source_file):
             break
 
         if num_emptylines < 1:
-            print "Empty line expected at line " + str(line)
+            print("Empty line expected at line " + str(line))
             exit(1)
 
         rows = [""] * height

@@ -1,0 +1,12 @@
+{
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "*.ipf": "json",
+        "funky_system.h": "c",
+        "display.h": "c",
+        "input.h": "c",
+        "stat.h": "c",
+        "windows.h": "c",
+        "os.h": "c"
+    }
+}

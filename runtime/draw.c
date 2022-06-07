@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include <funkyvm/cpu.h>
 #include <funkyvm/funkyvm.h>

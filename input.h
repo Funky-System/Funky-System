@@ -14,7 +14,7 @@ typedef struct fs_input_t {
 fs_input_t input_init();
 void input_destroy(fs_input_t *display);
 void input_frame(fs_input_t *display, CPU_State* state);
-
+int platform_handle_event(SDL_Event *event, CPU_State* state);
 extern Uint32 mousewheel_y;
 extern Uint32 mousewheel_x;
 
