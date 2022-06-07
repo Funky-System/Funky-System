@@ -33,17 +33,18 @@ static void getKeyState(CPU_State *state) {
 Uint32 *keyStates;
 static void getKeyPress(CPU_State *state) {
     const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
+    vm_type_signed_t keycode = STACK_VALUE(state, 0)->int_value;
 
-    if (keyboard_state[STACK_VALUE(state, 0)->int_value] &&
-        (!keyStates[STACK_VALUE(state, 0)->int_value]                              /* it isn't pressed */
-         || keyStates[STACK_VALUE(state, 0)->int_value] < GetFrameTicks() - 100    /* it hasnt been reported pressed for 100 ms */
-         || keyStates[STACK_VALUE(state, 0)->int_value] == GetFrameTicks() + 400   /* it has been reported this frame */
-         || keyStates[STACK_VALUE(state, 0)->int_value] == GetFrameTicks()         /* it has been reported this frame */
-        ) ) {
-        if (keyStates[STACK_VALUE(state, 0)->int_value] == 0) {
-            keyStates[STACK_VALUE(state, 0)->int_value] = GetFrameTicks() + 400;
-        } else if (keyStates[STACK_VALUE(state, 0)->int_value] < GetFrameTicks()) {
-            keyStates[STACK_VALUE(state, 0)->int_value] = GetFrameTicks();
+    if (keyboard_state[keycode] &&
+        (!keyStates[keycode]                              /* it isn't pressed */
+         || keyStates[keycode] < GetFrameTicks() - 100    /* it hasnt been reported pressed for 100 ms */
+         || keyStates[keycode] == GetFrameTicks() + 400   /* it has been reported this frame */
+         || keyStates[keycode] == GetFrameTicks()         /* it has been reported this frame */
+    ) ) {
+        if (keyStates[keycode] == 0) {
+            keyStates[keycode] = GetFrameTicks() + 400;
+        } else if (keyStates[keycode] < GetFrameTicks()) {
+            keyStates[keycode] = GetFrameTicks();
         }
         state->rr.int_value = 1;
         state->rr.type = VM_TYPE_INT;

@@ -67,6 +67,8 @@ void initNativeWindow() {
 
     SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
 
+    // reset scale to make room for menu
+    display_set_scale(get_display(), get_display()->scale);
     reset_scale_checkboxes();
 }
 
