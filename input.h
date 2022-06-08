@@ -5,7 +5,7 @@
 #ifndef FUNKY_SYSTEM_INPUT_H
 #define FUNKY_SYSTEM_INPUT_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 typedef struct fs_input_t {
     int __REMOVE_ME_WHEN_ITEMS_ARE_ADDED__;

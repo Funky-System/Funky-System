@@ -9,5 +9,7 @@ compile_commands.json
 CTestTestfile.cmake
 cmake-build-debug
 .idea
-build
+build/
+cmake-build-debug/
+cmake-build-release/
 emscripten/emcc_build

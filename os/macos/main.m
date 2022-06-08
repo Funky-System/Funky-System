@@ -106,3 +106,7 @@ void initNativeWindow() {
         [menubar addItem:displayMenuItem];
     }
 }
+
+int platform_handle_event(SDL_Event *event, CPU_State* state) {
+    return 0;
+}
