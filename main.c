@@ -61,7 +61,7 @@ void pump_events(CPU_State *state) {
     // FPS calculation
     if (tmr >= 5000) {
         //printf("FPS: %.2f, load: %.2f%%\n", num_frames / (tmr / 1000.0), (((double)tmr - overhead) / (double)tmr) * 100.0);
-        printf("FPS: %.2f\n", num_frames / (tmr / 1000.0));
+        printf("FPS: %.2f\n", (double)num_frames / ((double)tmr / 1000.0));
         tmr = 0;
         //overhead = 0;
         num_frames = 0;

@@ -30,13 +30,13 @@ static void getKeyState(CPU_State *state) {
     state->rr.type = VM_TYPE_INT;
 }
 
-Uint32 *keyStates;
+long *keyStates;
 static void getKeyPress(CPU_State *state) {
     const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
     vm_type_signed_t keycode = STACK_VALUE(state, 0)->int_value;
 
     if (keyboard_state[keycode] &&
-        (!keyStates[keycode]                              /* it isn't pressed */
+        (keyStates[keycode] == 0                          /* it isn't pressed */
          || keyStates[keycode] < GetFrameTicks() - 100    /* it hasnt been reported pressed for 100 ms */
          || keyStates[keycode] == GetFrameTicks() + 400   /* it has been reported this frame */
          || keyStates[keycode] == GetFrameTicks()         /* it has been reported this frame */
@@ -49,14 +49,27 @@ static void getKeyPress(CPU_State *state) {
         state->rr.int_value = 1;
         state->rr.type = VM_TYPE_INT;
         return;
+    } else if (keyStates[keycode] < 0) {
+        keyStates[keycode] = -keyStates[keycode] + 400;
+        state->rr.int_value = 1;
+        state->rr.type = VM_TYPE_INT;
+        return;
     } else {
         state->rr.int_value = 0;
         state->rr.type = VM_TYPE_INT;
     }
 }
 
+void registerKeyDown(Uint8 key, Uint32 timestamp) {
+    if (keyStates[key] == 0) {
+        keyStates[key] = -timestamp;
+    }
+}
+
 void resetKeyPress(Uint8 key) {
-    keyStates[key] = 0;
+    if (keyStates[key] > 0) {
+        keyStates[key] = 0;
+    }
 }
 
 static void getLeftButtonState(CPU_State *state) {
@@ -97,7 +110,7 @@ static void getMouseWheelY(CPU_State *state) {
 }
 
 void register_bindings_input(CPU_State *state) {
-    keyStates = calloc(1, sizeof(Uint32) * 512);
+    keyStates = calloc(1, sizeof(long) * 512);
 
     register_syscall(state, "getKeyState", getKeyState);
     register_syscall(state, "getKeyPress", getKeyPress);

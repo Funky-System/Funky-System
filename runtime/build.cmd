@@ -14,5 +14,5 @@ if not exist "%2" mkdir "%2"
 
 FOR %%f IN ("%1\*.wckd") DO (
     echo Compiling runtime object %%~nf
-    "%wickedc%" --arch %arch% -K "%%f" -o "%2\%%~nf.funk"
+    "%wickedc%" --only-if-newer --arch %arch% "%%f" -o "%2\%%~nf.funk"
 )

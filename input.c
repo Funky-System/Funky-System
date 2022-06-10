@@ -6,9 +6,10 @@
 #include "input.h"
 
 extern void resetKeyPress(Uint8 key);
+void registerKeyDown(Uint8 key, Uint32 timestamp);
 
 fs_input_t input_init() {
-    fs_input_t input;
+    fs_input_t input = {0};
 
     return input;
 }
@@ -32,7 +33,7 @@ void input_frame(fs_input_t *input, CPU_State* state) {
             mousewheel_x += e.wheel.x * (e.wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -1 : 1);
         }
         else if (e.type == SDL_KEYDOWN) {
-
+            registerKeyDown(e.key.keysym.scancode, e.common.timestamp);
         }
         else if (e.type == SDL_KEYUP) {
             resetKeyPress(e.key.keysym.scancode);
