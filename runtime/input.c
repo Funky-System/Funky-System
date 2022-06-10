@@ -35,7 +35,7 @@ static void getKeyPress(CPU_State *state) {
     const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
     vm_type_signed_t keycode = STACK_VALUE(state, 0)->int_value;
 
-    if (keyboard_state[keycode] &&
+    if ((keyboard_state[keycode] && keyStates[keycode] >= 0) &&
         (keyStates[keycode] == 0                          /* it isn't pressed */
          || keyStates[keycode] < GetFrameTicks() - 100    /* it hasnt been reported pressed for 100 ms */
          || keyStates[keycode] == GetFrameTicks() + 400   /* it has been reported this frame */
@@ -62,7 +62,7 @@ static void getKeyPress(CPU_State *state) {
 
 void registerKeyDown(Uint8 key, Uint32 timestamp) {
     if (keyStates[key] == 0) {
-        keyStates[key] = -timestamp;
+        keyStates[key] = -((long)timestamp);
     }
 }
 
