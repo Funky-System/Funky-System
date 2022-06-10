@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <tchar.h>
 
-#include "SDL2/SDL_syswm.h"
+#include "SDL_syswm.h"
 
 //#define ID_LOADROM 1
 #define ID_ABOUT 2

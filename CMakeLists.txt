@@ -28,7 +28,7 @@ add_dependencies(libfunky-vm funky-vm)
 set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/libfunky-vm.a"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
 if (NOT MSVC)
-        set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/libfunky-vm.a"
+        set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/${CMAKE_BUILD_TYPE}/libfunky-vm.a"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
 else()
         set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/${CMAKE_BUILD_TYPE}/funky-vm.lib"
@@ -41,7 +41,7 @@ include_directories("${source_dir}/include")
 ## FONTS
 add_custom_target(
         fonts
-        python ${CMAKE_CURRENT_SOURCE_DIR}/fonts/font_builder.py ${CMAKE_CURRENT_BINARY_DIR}
+        python3 ${CMAKE_CURRENT_SOURCE_DIR}/fonts/font_builder.py ${CMAKE_CURRENT_BINARY_DIR}
 )
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
@@ -50,7 +50,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 if(MSVC)
         add_custom_target(runtime cmd /C "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.cmd" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 else()
-        add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}" ${VM_ARCH_BITS})
+        add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}" ${VM_ARCH_BITS})
 endif()
 
 
@@ -71,12 +71,13 @@ INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
 set_property(SOURCE display.c APPEND PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/*.fnt.h)
 add_dependencies(funky runtime fonts)
 target_link_libraries(funky libfunky-vm ${SDL2_LIBRARIES})
+target_link_directories(funky PRIVATE ${SDL2_LIBRARY_DIRS})
 if (NOT MSVC)
         target_link_libraries(funky m)
 endif()
 
 if(APPLE)
-    target_sources(funky PUBLIC os/macos/main.m)
+    target_sources(funky PRIVATE os/macos/main.m)
     target_link_libraries(funky "-framework Foundation" "-framework Cocoa")
     configure_file(os/macos/Icon.png ${CMAKE_BINARY_DIR}/iconset/Icon.png COPYONLY)
 
@@ -88,7 +89,7 @@ if(APPLE)
 endif()
 
 if (WIN32)
-        target_sources(funky PUBLIC os/windows/win32.c)
+        target_sources(funky PRIVATE os/windows/win32.c)
         target_link_libraries(funky legacy_stdio_definitions.lib)
         configure_file(${SDL2_DLL} "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/" COPYONLY)
         #set_property(TARGET funky PROPERTY WIN32_EXECUTABLE true)

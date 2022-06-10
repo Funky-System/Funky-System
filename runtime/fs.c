@@ -1,4 +1,5 @@
 #define _XOPEN_SOURCE 500
+#include <SDL.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -8,6 +9,7 @@
 #include <Windows.h>
 #include <shellapi.h>
 #else
+#include <unistd.h>
 #include <dirent.h>
 #include <ftw.h>
 #endif
