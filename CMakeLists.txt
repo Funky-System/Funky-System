@@ -89,9 +89,13 @@ if(APPLE)
 endif()
 
 if (WIN32)
-        target_sources(funky PRIVATE os/windows/win32.c)
-        target_link_libraries(funky legacy_stdio_definitions.lib)
-        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/")
-        configure_file(${SDL2_DLL} "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/" COPYONLY)
-        #set_property(TARGET funky PROPERTY WIN32_EXECUTABLE true)
+    target_sources(funky PRIVATE os/windows/win32.c)
+    target_link_libraries(funky legacy_stdio_definitions.lib)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/")
+    configure_file(${SDL2_DLL} "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/" COPYONLY)
+    #set_property(TARGET funky PROPERTY WIN32_EXECUTABLE true)
+endif()
+
+if (UNIX AND NOT APPLE) # Linux
+    target_sources(funky PRIVATE os/linux/linux.c)
 endif()

@@ -89,7 +89,10 @@ fs_input_t *get_input() { return &input; }
     #include <unistd.h>
 #endif
 #ifdef FUNKY_VM_OS_WINDOWS
-    char* get_executable_path(const char* append);
+char* get_executable_path(const char* append);
+#endif
+#ifdef FUNKY_VM_OS_LINUX
+char* get_executable_path(const char* append);
 #endif
 
 static void run(void *arg) {
@@ -142,6 +145,10 @@ int main() {
     #endif
 
     #ifdef FUNKY_VM_OS_WINDOWS
+        module_register_path(&cpu_state, get_executable_path(""));
+    #endif
+
+    #ifdef FUNKY_VM_OS_LINUX
         module_register_path(&cpu_state, get_executable_path(""));
     #endif
 
