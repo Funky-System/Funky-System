@@ -27,12 +27,17 @@ add_library(libfunky-vm IMPORTED STATIC GLOBAL)
 add_dependencies(libfunky-vm funky-vm)
 set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/libfunky-vm.a"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
-if (NOT MSVC)
-        set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/${CMAKE_BUILD_TYPE}/libfunky-vm.a"
-        "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
-else()
+if (MSVC)
         set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/${CMAKE_BUILD_TYPE}/funky-vm.lib"
         "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
+else()
+        if (CMAKE_CONFIGURATION_TYPES)
+                set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/${CMAKE_BUILD_TYPE}/libfunky-vm.a"
+                "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
+        else()
+                set_target_properties(libfunky-vm PROPERTIES "IMPORTED_LOCATION" "${binary_dir}/libfunky-vm.a"
+                "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}")
+        endif()
 endif()
 
 include_directories("${source_dir}/include")
@@ -50,7 +55,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 if(MSVC)
         add_custom_target(runtime cmd /C "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.cmd" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 else()
-        add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}" ${VM_ARCH_BITS})
+        if (CMAKE_CONFIGURATION_TYPES)
+                add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}" ${VM_ARCH_BITS})
+        else()
+                add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}" ${VM_ARCH_BITS})
+        endif()
 endif()
 
 
