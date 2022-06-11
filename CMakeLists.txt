@@ -50,7 +50,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 if(MSVC)
         add_custom_target(runtime cmd /C "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.cmd" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}")
 else()
-        add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}" ${VM_ARCH_BITS})
+        if (CMAKE_CONFIGURATION_TYPES)
+                add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE}" ${VM_ARCH_BITS})
+        else()
+                add_custom_target(runtime bash "${CMAKE_CURRENT_SOURCE_DIR}/runtime/build.sh" "${CMAKE_CURRENT_SOURCE_DIR}/runtime" "${CMAKE_CURRENT_BINARY_DIR}" ${VM_ARCH_BITS})
+        endif()
 endif()
 
 
