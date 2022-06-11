@@ -26,7 +26,8 @@ jobs:
         cd Wicked-Compiler
         cmake -B ./build -DCMAKE_BUILD_TYPE=Release -DTESTING_ENABLED=false
         cmake --build ./build --config Release
-        ls -lah
+        ls -lah build
+        ls -lah $PWD/build
         echo "$PWD/build" >> $GITHUB_PATH
     
     - name: Install libsdl2-dev
